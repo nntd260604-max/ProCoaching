@@ -1,0 +1,14 @@
+# GYMHUB HYBRID PLATFORM - PROJECT RULES
+
+## 1. Domain Rules (Mandatory)
+- **Hybrid Cart**: An `Order` can contain both `SUPPLEMENT_VARIANT` (physical goods requiring shipping & FEFO batch allocation) and `COURSE_MEMBERSHIP` (digital courses/gym passes activated immediately upon payment).
+- **FEFO Inventory Allocation**: Never deduct stock blindly from `SupplementVariant`. Always query `InventoryBatch` where `remainingQuantity > 0` and `expiryDate > now()`, ordered by `expiryDate ASC` (First Expired, First Out), deduct from the earliest expiring batch, and record `allocatedBatchId` in `OrderItem`.
+- **Dynamic QR Check-in**: Member gym passes generate a time-based 60-second token using `qrSecretKey`. Scanning a `PT_SESSION` QR marks the `PtBooking` as `COMPLETED`, decrements `remainingPtSessions` on `UserEnrollment`, and inserts a `GymCheckin` record inside a single database transaction.
+- **Anti-Skip Video Progress**: A `CourseLesson` is only marked `isCompleted = true` in `UserLessonProgress` when `watchedSeconds >= durationSeconds * 0.8`.
+- **Allergen-Safe AI Recommendation**: Always filter out `SupplementProduct` items whose `allergenTags` overlap with the user's selected `allergies` (e.g., `LACTOSE`, `HIGH_CAFFEINE`) before recommending combos.
+
+## 2. UI & Coding Standards
+- All user-facing text, labels, mock data, and error messages MUST be in natural Vietnamese.
+- Provide a quick "Chuyển vai trò Demo (Hội viên / PT / Admin)" switcher in the top navigation bar so the graduation defense committee can test all 3 portals without logging out and typing passwords repeatedly.
+- Never leave `// TODO` or empty mock buttons; every button must trigger real state updates or API calls with toast notifications.
+

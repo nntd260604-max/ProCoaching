@@ -1,0 +1,480 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  MEMBER
+  TRAINER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  LOCKED
+}
+
+enum CategoryType {
+  SUPPLEMENT
+  COURSE
+}
+
+enum FitnessGoal {
+  MUSCLE_GAIN
+  FAT_LOSS
+  ENDURANCE
+  RECOVERY
+}
+
+enum CourseType {
+  ONLINE_VIDEO
+  GYM_MEMBERSHIP
+  PT_PACKAGE
+  HYBRID_COMBO
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum BatchStatus {
+  AVAILABLE
+  NEAR_EXPIRY
+  EXPIRED
+  DEPLETED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  EXPIRED
+  FROZEN
+}
+
+enum CheckinType {
+  GYM_ENTRY
+  PT_SESSION
+}
+
+enum OrderItemType {
+  SUPPLEMENT_VARIANT
+  COURSE_MEMBERSHIP
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PaymentMethod {
+  VNPAY
+  MOMO
+  PAYOS
+  COD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum FulfillmentStatus {
+  DIGITAL_ONLY
+  PROCESSING
+  SHIPPING
+  DELIVERED
+  CANCELLED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// 1. Bảng users (Tài khoản người dùng)
+model User {
+  id              String                @id @default(uuid())
+  email           String                @unique
+  passwordHash    String                @map("password_hash")
+  fullName        String                @map("full_name")
+  phone           String?               @unique
+  avatarUrl       String?               @map("avatar_url")
+  role            UserRole              @default(MEMBER)
+  status          UserStatus            @default(ACTIVE)
+  createdAt       DateTime              @default(now()) @map("created_at")
+
+  trainerProfile  TrainerProfile?
+  availabilities  TrainerAvailability[]
+  coursesTaught   CourseMembership[]    @relation("InstructorCourses")
+  bodyMetrics     BodyMetricsLog[]
+  aiConsultations AiConsultationLog[]
+  enrollments     UserEnrollment[]      @relation("MemberEnrollments")
+  ptAssigned      UserEnrollment[]      @relation("TrainerEnrollments")
+  lessonProgress  UserLessonProgress[]
+  memberBookings  PtBooking[]           @relation("MemberBookings")
+  trainerBookings PtBooking[]           @relation("TrainerBookings")
+  memberCheckins  GymCheckin[]          @relation("MemberCheckins")
+  staffVerified   GymCheckin[]          @relation("StaffVerifiedCheckins")
+  orders          Order[]
+
+  @@map("users")
+}
+
+// 2. Bảng trainer_profiles (Hồ sơ chuyên môn Huấn luyện viên)
+model TrainerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  bio             String
+  specialties     String
+  certifications  Json?
+  yearsExperience Int      @default(1) @map("years_experience")
+  ratingAvg       Decimal  @default(5.00) @map("rating_avg") @db.Decimal(3, 2)
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("trainer_profiles")
+}
+
+// 3. Bảng body_metrics_logs (Lịch sử đo chỉ số cơ thể & TDEE)
+model BodyMetricsLog {
+  id              String              @id @default(uuid())
+  userId          String              @map("user_id")
+  heightCm        Decimal             @map("height_cm") @db.Decimal(5, 2)
+  weightKg        Decimal             @map("weight_kg") @db.Decimal(5, 2)
+  bodyFatPct      Decimal?            @map("body_fat_pct") @db.Decimal(4, 2)
+  activityLevel   Decimal             @map("activity_level") @db.Decimal(3, 2)
+  bmi             Decimal             @db.Decimal(4, 2)
+  tdeeCalories    Int                 @map("tdee_calories")
+  fitnessGoal     FitnessGoal         @map("fitness_goal")
+  allergies       String[]            @default([])
+  recordedAt      DateTime            @default(now()) @map("recorded_at")
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiConsultations AiConsultationLog[]
+
+  @@map("body_metrics_logs")
+}
+
+// 4. Bảng ai_consultation_logs (Lịch sử Trợ lý AI tư vấn Thực đơn & Combo lọc dị ứng)
+model AiConsultationLog {
+  id                String         @id @default(uuid())
+  userId            String         @map("user_id")
+  metricsLogId      String         @map("metrics_log_id")
+  targetMacros      Json           @map("target_macros")
+  excludedAllergens String[]       @default([]) @map("excluded_allergens")
+  mealPlanMarkdown  String         @map("meal_plan_markdown")
+  recommendedItems  Json           @map("recommended_items")
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metricsLog        BodyMetricsLog @relation(fields: [metricsLogId], references: [id], onDelete: Cascade)
+
+  @@map("ai_consultation_logs")
+}
+
+// 5. Bảng categories (Danh mục sản phẩm & khóa học)
+model Category {
+  id           String              @id @default(uuid())
+  name         String
+  slug         String              @unique
+  categoryType CategoryType        @map("category_type")
+  parentId     String?             @map("parent_id")
+
+  parent       Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[]          @relation("CategoryHierarchy")
+  supplements  SupplementProduct[]
+  courses      CourseMembership[]
+
+  @@map("categories")
+}
+
+// 6. Bảng supplement_products (Thông tin chung Thực phẩm bổ sung)
+model SupplementProduct {
+  id             String              @id @default(uuid())
+  categoryId     String?             @map("category_id")
+  name           String
+  slug           String              @unique
+  brand          String
+  originCountry  String?             @map("origin_country")
+  description    String
+  nutritionFacts Json                @map("nutrition_facts")
+  allergenTags   String[]            @default([]) @map("allergen_tags")
+  targetGoal     FitnessGoal         @map("target_goal")
+  isActive       Boolean             @default(true) @map("is_active")
+
+  category       Category?           @relation(fields: [categoryId], references: [id])
+  variants       SupplementVariant[]
+
+  @@map("supplement_products")
+}
+
+// 7. Bảng supplement_variants (Biến thể Mùi vị - Trọng lượng - Tổng tồn kho)
+model SupplementVariant {
+  id            String            @id @default(uuid())
+  productId     String            @map("product_id")
+  sku           String            @unique
+  flavor        String
+  weightLabel   String            @map("weight_label")
+  servingsCount Int               @default(30) @map("servings_count")
+  weightGrams   Int               @map("weight_grams")
+  price         Decimal           @db.Decimal(12, 2)
+  salePrice     Decimal?          @map("sale_price") @db.Decimal(12, 2)
+  stockQuantity Int               @default(0) @map("stock_quantity")
+  imageUrl      String?           @map("image_url")
+
+  product       SupplementProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  batches       InventoryBatch[]
+  orderItems    OrderItem[]
+
+  @@map("supplement_variants")
+}
+
+// 8. Bảng inventory_batches (Quản lý Lô nhập kho & Hạn sử dụng theo chuẩn FEFO)
+model InventoryBatch {
+  id                String            @id @default(uuid())
+  variantId         String            @map("variant_id")
+  batchCode         String            @map("batch_code")
+  supplierName      String?           @map("supplier_name")
+  importPrice       Decimal           @map("import_price") @db.Decimal(12, 2)
+  initialQuantity   Int               @map("initial_quantity")
+  remainingQuantity Int               @map("remaining_quantity")
+  manufacturedDate  DateTime?         @map("manufactured_date") @db.Date
+  expiryDate        DateTime          @map("expiry_date") @db.Date
+  batchStatus       BatchStatus       @default(AVAILABLE) @map("batch_status")
+  importedAt        DateTime          @default(now()) @map("imported_at")
+
+  variant           SupplementVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  allocatedItems    OrderItem[]
+
+  @@index([variantId, expiryDate])
+  @@map("inventory_batches")
+}
+
+// 9. Bảng courses_memberships (Gói tập Offline, PT 1-1 và Khóa học Video Online)
+model CourseMembership {
+  id                 String           @id @default(uuid())
+  categoryId         String?          @map("category_id")
+  trainerId          String?          @map("trainer_id")
+  title              String
+  slug               String           @unique
+  courseType         CourseType       @map("course_type")
+  level              CourseLevel      @default(BEGINNER)
+  targetGoal         FitnessGoal      @map("target_goal")
+  price              Decimal          @db.Decimal(12, 2)
+  durationDays       Int              @map("duration_days")
+  ptSessionsIncluded Int              @default(0) @map("pt_sessions_included")
+  thumbnailUrl       String           @map("thumbnail_url")
+  previewVideoUrl    String?          @map("preview_video_url")
+
+  category           Category?        @relation(fields: [categoryId], references: [id])
+  trainer            User?            @relation("InstructorCourses", fields: [trainerId], references: [id])
+  modules            CourseModule[]
+  enrollments        UserEnrollment[]
+  orderItems         OrderItem[]
+
+  @@map("courses_memberships")
+}
+
+// 10. Bảng course_modules (Chương học / Giai đoạn huấn luyện)
+model CourseModule {
+  id        String           @id @default(uuid())
+  courseId  String           @map("course_id")
+  title     String
+  sortOrder Int              @map("sort_order")
+
+  course    CourseMembership @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   CourseLesson[]
+
+  @@map("course_modules")
+}
+
+// 11. Bảng course_lessons (Bài giảng Video chi tiết & Hướng dẫn kỹ thuật)
+model CourseLesson {
+  id              String               @id @default(uuid())
+  moduleId        String               @map("module_id")
+  title           String
+  videoUrl        String               @map("video_url")
+  durationSeconds Int                  @map("duration_seconds")
+  workoutGuideMd  String?              @map("workout_guide_md")
+  isFreePreview   Boolean              @default(false) @map("is_free_preview")
+  sortOrder       Int                  @map("sort_order")
+
+  module          CourseModule         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progressRecords UserLessonProgress[]
+
+  @@map("course_lessons")
+}
+
+// 12. Bảng user_lesson_progress (Lưu vị trí xem Video & Chống tua bài)
+model UserLessonProgress {
+  id              String         @id @default(uuid())
+  enrollmentId    String         @map("enrollment_id")
+  userId          String         @map("user_id")
+  lessonId        String         @map("lesson_id")
+  watchedSeconds  Int            @default(0) @map("watched_seconds")
+  lastPositionSec Int            @default(0) @map("last_position_sec")
+  isCompleted     Boolean        @default(false) @map("is_completed")
+  completedAt     DateTime?      @map("completed_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  enrollment      UserEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson          CourseLesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("user_lesson_progress")
+}
+
+// 13. Bảng user_enrollments (Thẻ tập & Khóa học học viên đã mua)
+model UserEnrollment {
+  id                  String               @id @default(uuid())
+  userId              String               @map("user_id")
+  courseId            String               @map("course_id")
+  orderId             String               @map("order_id")
+  assignedTrainerId   String?              @map("assigned_trainer_id")
+  qrSecretKey         String               @unique @map("qr_secret_key")
+  activatedAt         DateTime             @default(now()) @map("activated_at")
+  expiresAt           DateTime             @map("expires_at")
+  totalPtSessions     Int                  @default(0) @map("total_pt_sessions")
+  remainingPtSessions Int                  @default(0) @map("remaining_pt_sessions")
+  progressPct         Decimal              @default(0.00) @map("progress_pct") @db.Decimal(5, 2)
+  status              EnrollmentStatus     @default(ACTIVE)
+
+  member              User                 @relation("MemberEnrollments", fields: [userId], references: [id])
+  trainer             User?                @relation("TrainerEnrollments", fields: [assignedTrainerId], references: [id])
+  course              CourseMembership     @relation(fields: [courseId], references: [id])
+  order               Order                @relation(fields: [orderId], references: [id])
+  bookings            PtBooking[]
+  lessonProgress      UserLessonProgress[]
+  checkins            GymCheckin[]
+
+  @@map("user_enrollments")
+}
+
+// 14. Bảng trainer_availabilities (Khung giờ làm việc của PT)
+model TrainerAvailability {
+  id        String  @id @default(uuid())
+  trainerId String  @map("trainer_id")
+  dayOfWeek Int     @map("day_of_week")
+  startTime String  @map("start_time")
+  endTime   String  @map("end_time")
+  isActive  Boolean @default(true) @map("is_active")
+
+  trainer   User    @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@map("trainer_availabilities")
+}
+
+// 15. Bảng pt_bookings (Lịch hẹn tập 1-1 giữa Học viên và PT)
+model PtBooking {
+  id           String         @id @default(uuid())
+  enrollmentId String         @map("enrollment_id")
+  memberId     String         @map("member_id")
+  trainerId    String         @map("trainer_id")
+  bookingDate  DateTime       @map("booking_date") @db.Date
+  startTime    String         @map("start_time")
+  endTime      String         @map("end_time")
+  focusArea    String?        @map("focus_area")
+  trainerNotes String?        @map("trainer_notes")
+  status       BookingStatus  @default(CONFIRMED)
+
+  enrollment   UserEnrollment @relation(fields: [enrollmentId], references: [id])
+  member       User           @relation("MemberBookings", fields: [memberId], references: [id])
+  trainer      User           @relation("TrainerBookings", fields: [trainerId], references: [id])
+  checkins     GymCheckin[]
+
+  @@unique([trainerId, bookingDate, startTime])
+  @@map("pt_bookings")
+}
+
+// 16. Bảng gym_checkins (Nhật ký Quét mã QR Động ra vào phòng tập & Điểm danh PT)
+model GymCheckin {
+  id            String         @id @default(uuid())
+  enrollmentId  String         @map("enrollment_id")
+  memberId      String         @map("member_id")
+  ptBookingId   String?        @map("pt_booking_id")
+  verifiedById  String?        @map("verified_by_id")
+  checkinType   CheckinType    @map("checkin_type")
+  qrTokenHash   String         @map("qr_token_hash")
+  checkinTime   DateTime       @default(now()) @map("checkin_time")
+  checkoutTime  DateTime?      @map("checkout_time")
+
+  enrollment    UserEnrollment @relation(fields: [enrollmentId], references: [id])
+  member        User           @relation("MemberCheckins", fields: [memberId], references: [id])
+  ptBooking     PtBooking?     @relation(fields: [ptBookingId], references: [id])
+  verifiedBy    User?          @relation("StaffVerifiedCheckins", fields: [verifiedById], references: [id])
+
+  @@map("gym_checkins")
+}
+
+// 17. Bảng vouchers (Mã giảm giá khuyến mãi)
+model Voucher {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  discountType  DiscountType @map("discount_type")
+  discountValue Decimal      @map("discount_value") @db.Decimal(12, 2)
+  minOrderValue Decimal      @default(0) @map("min_order_value") @db.Decimal(12, 2)
+  usageLimit    Int          @map("usage_limit")
+  usedCount     Int          @default(0) @map("used_count")
+  validUntil    DateTime     @map("valid_until")
+
+  orders        Order[]
+
+  @@map("vouchers")
+}
+
+// 18. Bảng orders (Đơn hàng tổng hợp)
+model Order {
+  id                String            @id @default(uuid())
+  orderCode         String            @unique @map("order_code")
+  userId            String            @map("user_id")
+  voucherId         String?           @map("voucher_id")
+  hasPhysicalItems  Boolean           @default(false) @map("has_physical_items")
+  shippingAddress   Json?             @map("shipping_address")
+  subtotalAmount    Decimal           @default(0) @map("subtotal_amount") @db.Decimal(12, 2)
+  shippingFee       Decimal           @default(0) @map("shipping_fee") @db.Decimal(12, 2)
+  discountAmount    Decimal           @default(0) @map("discount_amount") @db.Decimal(12, 2)
+  totalAmount       Decimal           @map("total_amount") @db.Decimal(12, 2)
+  paymentMethod     PaymentMethod     @default(VNPAY) @map("payment_method")
+  paymentStatus     PaymentStatus     @default(PENDING) @map("payment_status")
+  fulfillmentStatus FulfillmentStatus @default(PROCESSING) @map("fulfillment_status")
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  user              User              @relation(fields: [userId], references: [id])
+  voucher           Voucher?          @relation(fields: [voucherId], references: [id])
+  items             OrderItem[]
+  enrollments       UserEnrollment[]
+
+  @@map("orders")
+}
+
+// 19. Bảng order_items (Chi tiết từng dòng sản phẩm/khóa học kèm Truy vết Lô FEFO)
+model OrderItem {
+  id                  String             @id @default(uuid())
+  orderId             String             @map("order_id")
+  itemType            OrderItemType      @map("item_type")
+  supplementVariantId String?            @map("supplement_variant_id")
+  allocatedBatchId    String?            @map("allocated_batch_id")
+  courseId            String?            @map("course_id")
+  itemNameSnapshot    String             @map("item_name_snapshot")
+  quantity            Int                @default(1)
+  unitPrice           Decimal            @map("unit_price") @db.Decimal(12, 2)
+  lineTotal           Decimal            @map("line_total") @db.Decimal(12, 2)
+
+  order               Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  supplementVariant   SupplementVariant? @relation(fields: [supplementVariantId], references: [id])
+  allocatedBatch      InventoryBatch?    @relation(fields: [allocatedBatchId], references: [id])
+  course              CourseMembership?  @relation(fields: [courseId], references: [id])
+
+  @@map("order_items")
+}
+
