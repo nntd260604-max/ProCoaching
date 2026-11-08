@@ -5,7 +5,6 @@ import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
-  PlaySquare,
   CheckCircle2,
   Clock,
   FastForward,
@@ -32,11 +31,14 @@ export default function MemberVideoClassroomPage() {
 
   const loadClassroomData = useCallback(
     async (preserveLessonId?: string) => {
-      const res = await fetch(`/api/member?userId=${activeUserId || "user-member-01"}`);
+      const res = await fetch(
+        `/api/member?userId=${activeUserId || "user-member-01"}`
+      );
       const data = await res.json();
       const found =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data.enrollments?.find((e: any) => e.id === enrollmentId) || data.enrollments?.[0];
+        data.enrollments?.find((e: any) => e.id === enrollmentId) ||
+        data.enrollments?.[0];
       if (found) {
         setEnrollment(found);
         const allLessons = found.modules.flatMap(
@@ -57,7 +59,6 @@ export default function MemberVideoClassroomPage() {
     loadClassroomData();
   }, [loadClassroomData]);
 
-  // Khôi phục vị trí giây đang xem dở (last_position_sec - Resume Playback)
   useEffect(() => {
     if (videoRef.current && activeLesson?.progress?.lastPositionSec) {
       try {
@@ -69,9 +70,16 @@ export default function MemberVideoClassroomPage() {
         // Ignore if metadata not loaded yet
       }
     }
-  }, [activeLesson?.id, activeLesson?.durationSeconds, activeLesson?.progress?.lastPositionSec]);
+  }, [
+    activeLesson?.id,
+    activeLesson?.durationSeconds,
+    activeLesson?.progress?.lastPositionSec,
+  ]);
 
-  const sendProgressHeartbeat = async (addedSec: number, currentPosSec: number) => {
+  const sendProgressHeartbeat = async (
+    addedSec: number,
+    currentPosSec: number
+  ) => {
     if (!activeLesson || !enrollment) return;
     setSyncing(true);
     try {
@@ -91,8 +99,8 @@ export default function MemberVideoClassroomPage() {
       if (res.ok) {
         if (!wasCompleted && data.progress.isCompleted) {
           pushToast({
-            title: "Chúc mừng! Đã đạt >= 80% thời lượng thực xem!",
-            description: `Bài học "${activeLesson.title}" đã được tự động tích xanh Hoàn thành.`,
+            title: "Đã hoàn thành bài học!",
+            description: `Bạn đã xem đủ trên 80% thời lượng bài "${activeLesson.title}".`,
             type: "success",
           });
         }
@@ -105,8 +113,8 @@ export default function MemberVideoClassroomPage() {
 
   if (!enrollment || !activeLesson) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-16 text-center text-slate-400">
-        Đang mở phòng học Video trực tuyến...
+      <div className="mx-auto max-w-6xl px-4 py-16 text-center text-sm font-medium text-slate-600">
+        Đang mở phòng học Video...
       </div>
     );
   }
@@ -122,22 +130,20 @@ export default function MemberVideoClassroomPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link
           href="/dashboard/member"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white"
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-600"
         >
           <ArrowLeft className="h-4 w-4" />
-          Quay lại Tủ Đồ Hội Viên
+          Quay lại Trang Hội Viên
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="rounded-xl bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 text-xs font-bold text-emerald-400">
-            Tiến độ tổng khóa học: {enrollment.progressPct}%
-          </span>
-        </div>
+        <span className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 text-xs font-bold text-emerald-700">
+          Tiến độ khóa học: {enrollment.progressPct}%
+        </span>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        {/* Left Video Player & Anti-Skip Tracker */}
+        {/* Left Column: Video Player, Real-time Watched Progress & Workout Guide */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
+          <div className="solid-card p-3 overflow-hidden">
             <video
               ref={videoRef}
               key={activeLesson.id}
@@ -150,121 +156,119 @@ export default function MemberVideoClassroomPage() {
                 }
               }}
               onTimeUpdate={(e) => {
-                // Tự động gửi Heartbeat mỗi khi xem thêm 10 giây
                 const currentPos = Math.floor(e.currentTarget.currentTime);
                 if (currentPos > 0 && currentPos % 10 === 0 && !syncing) {
                   sendProgressHeartbeat(2, currentPos);
                 }
               }}
-              className="aspect-video w-full bg-black object-cover"
+              className="aspect-video w-full rounded-xl bg-slate-950 object-cover"
             />
           </div>
 
-          {/* Thanh kiểm soát Chống Tua Bài (Anti-Skip Progress Bar) */}
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/85 p-6 space-y-4">
+          {/* Watched Progress Bar Card */}
+          <div className="solid-card p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-md bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
-                    Heartbeat 10s • Resume Playback
-                  </span>
+                <div className="flex flex-wrap items-center gap-2">
                   {isCompleted ? (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500 px-2.5 py-0.5 text-[11px] font-black text-slate-950">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> ĐÃ HOÀN THÀNH BÀI HỌC (&gt;= 80%)
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Đã hoàn thành bài học (&ge; 80%)
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 text-[11px] font-bold text-amber-300">
-                      <Clock className="h-3.5 w-3.5" /> Cần xem tối thiểu {requiredSec}s (80%) để mở khóa hoàn thành
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-bold text-amber-700">
+                      <Clock className="h-3.5 w-3.5" /> Cần xem tối thiểu {requiredSec} giây (80%) để hoàn thành
                     </span>
                   )}
                 </div>
-                <h1 className="text-xl font-black text-white mt-2">{activeLesson.title}</h1>
+                <h1 className="text-xl font-extrabold text-slate-900 mt-2">
+                  {activeLesson.title}
+                </h1>
               </div>
 
-              {/* Nút Mô phỏng Heartbeat +15s giúp Hội đồng chấm đồ án test nhanh ngưỡng 80% */}
               <button
                 type="button"
                 disabled={syncing}
                 onClick={() =>
                   sendProgressHeartbeat(
                     15,
-                    Math.min(durationSec, (activeLesson.progress?.lastPositionSec || 0) + 15)
+                    Math.min(
+                      durationSec,
+                      (activeLesson.progress?.lastPositionSec || 0) + 15
+                    )
                   )
                 }
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-xs font-black text-slate-950 shadow-md hover:opacity-95 shrink-0"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition shrink-0"
               >
                 <FastForward className="h-4 w-4" />
-                {syncing
-                  ? "Đang đồng bộ Heartbeat..."
-                  : "Mô Phỏng Xem Thực Tế +15 Giây (Test Ngưỡng 80%)"}
+                {syncing ? "Đang lưu tiến độ..." : "Cộng nhanh +15 giây thực xem"}
               </button>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs text-slate-300">
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-medium text-slate-600">
                 <span>
-                  Thời gian thực xem tích lũy (`watched_seconds`):{" "}
-                  <strong className="text-emerald-400">{watchedSec} giây</strong> / {durationSec}{" "}
-                  giây ({watchedPct}%)
+                  Thời lượng đã xem:{" "}
+                  <strong className="font-mono text-slate-900">
+                    {watchedSec}s / {durationSec}s ({watchedPct}%)
+                  </strong>
                 </span>
                 <span>
-                  Vị trí dừng gần nhất (`last_position_sec`):{" "}
-                  <strong className="text-orange-400">
+                  Vị trí đang phát:{" "}
+                  <strong className="font-mono text-indigo-600">
                     {activeLesson.progress?.lastPositionSec || 0}s
                   </strong>
                 </span>
               </div>
 
-              <div className="relative h-3.5 w-full overflow-hidden rounded-full bg-slate-950 border border-slate-800">
+              <div className="relative h-3 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-200">
                 <div
                   style={{ width: `${watchedPct}%` }}
                   className={`h-full transition-all duration-500 ${
-                    isCompleted ? "bg-emerald-500" : "bg-orange-500"
+                    isCompleted ? "bg-emerald-600" : "bg-indigo-600"
                   }`}
                 />
-                {/* Vạch mốc 80% */}
                 <div
                   style={{ left: "80%" }}
-                  className="absolute top-0 bottom-0 w-0.5 bg-white"
-                  title="Ngưỡng 80% mở khóa hoàn thành"
+                  className="absolute top-0 bottom-0 w-0.5 bg-slate-900"
+                  title="Mốc 80% hoàn thành bài học"
                 />
               </div>
-              <div className="flex justify-between text-[11px] text-slate-500">
+              <div className="flex justify-between text-[11px] font-medium text-slate-500">
                 <span>0%</span>
-                <span className="text-emerald-400 font-bold">
-                  ↑ Mốc 80% ({requiredSec}s) — Tự động tích xanh Hoàn thành
+                <span className="text-emerald-700 font-bold">
+                  ↑ Mốc 80% ({requiredSec}s) — Tự động ghi nhận hoàn thành
                 </span>
                 <span>100%</span>
               </div>
             </div>
           </div>
 
-          {/* Hướng dẫn Sets x Reps bên dưới Video */}
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 space-y-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-emerald-400" />
-              Giáo Án Thực Hành Sets x Reps & Lưu Ý Kỹ Thuật (`workout_guide_md`)
+          {/* Workout Guide (Sets x Reps) */}
+          <div className="solid-card p-6 space-y-3">
+            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <Dumbbell className="h-5 w-5 text-emerald-600" />
+              Hướng Dẫn Thực Hành (Số Hiệp & Số Lần Lặp)
             </h3>
-            <div className="rounded-2xl bg-slate-950 p-4 border border-slate-800 text-xs sm:text-sm leading-relaxed text-slate-200 whitespace-pre-line">
+            <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 text-xs sm:text-sm font-medium leading-relaxed text-slate-700 whitespace-pre-line">
               {activeLesson.workoutGuideMd ||
                 "Thực hiện 4 hiệp x 8-12 lần lặp (Reps), nghỉ 60-90 giây giữa các hiệp."}
             </div>
           </div>
         </div>
 
-        {/* Right Curriculum Sidebar */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        {/* Right Column: Modules & Lessons List */}
+        <div className="lg:col-span-4">
+          <div className="solid-card p-6 space-y-4 sticky top-24">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <span className="text-xs font-bold uppercase text-emerald-400">
-                  Danh Sách Bài Tập
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+                  Giáo Trình Khóa Học
                 </span>
-                <h2 className="text-base font-black text-white">
-                  Nội Dung Khóa Học ({enrollment.progressPct}%)
+                <h2 className="text-base font-extrabold text-slate-900">
+                  Danh Sách Bài Giảng ({enrollment.progressPct}%)
                 </h2>
               </div>
-              <ShieldCheck className="h-5 w-5 text-emerald-400" />
+              <ShieldCheck className="h-5 w-5 text-emerald-600" />
             </div>
 
             <div className="space-y-4">
@@ -272,7 +276,9 @@ export default function MemberVideoClassroomPage() {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (mod: any) => (
                   <div key={mod.id} className="space-y-2">
-                    <div className="text-xs font-bold text-slate-300">{mod.title}</div>
+                    <div className="text-xs font-extrabold text-slate-800">
+                      {mod.title}
+                    </div>
                     <div className="space-y-2">
                       {mod.lessons.map(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,26 +289,28 @@ export default function MemberVideoClassroomPage() {
                               key={les.id}
                               type="button"
                               onClick={() => setActiveLesson(les)}
-                              className={`w-full flex items-start justify-between gap-2.5 rounded-2xl border p-3 text-left transition ${
+                              className={`w-full flex items-start justify-between gap-2.5 rounded-xl border p-3 text-left transition ${
                                 isCurrent
-                                  ? "border-emerald-500 bg-emerald-500/15"
-                                  : "border-slate-800 bg-slate-950 hover:border-slate-700"
+                                  ? "border-indigo-600 bg-indigo-50/70"
+                                  : "border-slate-200 bg-white hover:bg-slate-50"
                               }`}
                             >
                               <div className="flex items-start gap-2">
-                                <Play className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
+                                <Play className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
                                 <div>
-                                  <div className="text-xs font-bold text-white">{les.title}</div>
-                                  <div className="text-[11px] text-slate-400 mt-1">
+                                  <div className="text-xs font-bold text-slate-900">
+                                    {les.title}
+                                  </div>
+                                  <div className="font-mono text-[11px] font-medium text-slate-500 mt-1">
                                     Đã xem: {les.progress?.watchedSeconds || 0}s /{" "}
                                     {les.durationSeconds}s
                                   </div>
                                 </div>
                               </div>
                               {les.progress?.isCompleted ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                               ) : (
-                                <Clock className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
+                                <Clock className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
                               )}
                             </button>
                           );
@@ -319,4 +327,3 @@ export default function MemberVideoClassroomPage() {
     </div>
   );
 }
-

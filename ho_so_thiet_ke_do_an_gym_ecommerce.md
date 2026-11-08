@@ -2,17 +2,18 @@
 
 **Chuyên ngành:** Công nghệ thông tin / Kỹ thuật phần mềm  
 **Kiến trúc công nghệ:** Next.js (App Router, TypeScript, Tailwind CSS) + Node.js (Express/NestJS) + PostgreSQL (Prisma ORM) + Redis + Google Gemini API  
-**Mô hình kinh doanh:** Kết hợp dịch vụ phòng tập/PT trực tiếp (Offline Membership & 1-1 Coaching), Khóa học video tập luyện trực tuyến (Online Fitness Courses) và Cửa hàng thực phẩm bổ sung (Supplement E-Commerce).
+**Mô hình kinh doanh:** Kết hợp dịch vụ phòng tập/PT trực tiếp (Offline Membership & 1-1 Coaching), Khóa học video tập luyện trực tuyến (Online Fitness Courses) và Cửa hàng thực phẩm bổ sung (Supplement E-Commerce).  
+**Ngôn ngữ Thiết kế Giao diện (Design System):** **Selective Glassmorphism (Kính mờ chọn lọc & Phân cấp thị giác thông minh)** — Tối giản, tinh tế, sử dụng chất liệu kính trong suốt có chọn lọc để dẫn dắt sự tập trung trên nền Solid/Gradient dịu mắt, đảm bảo độ tương phản cao và khả năng đọc tối ưu.
 
 ## 1. Đề Cương Chi Tiết Cuốn Báo Cáo Tốt Nghiệp (Chuẩn Học Thuật CNTT)
 
-Đề cương dưới đây đã được tích hợp đầy đủ **4 tính năng nâng cao đắt giá** (Điểm danh QR động, Lưu tiến độ xem video chống tua bài, Quản lý lô hàng cận date theo chuẩn FEFO, và Trợ lý AI tư vấn dinh dưỡng tránh dị ứng), giúp đồ án đạt độ sâu kỹ thuật thuyết phục trước hội đồng bảo vệ.
+Đề cương dưới đây đã được tích hợp đầy đủ **4 tính năng nâng cao đắt giá** (Điểm danh QR động, Lưu tiến độ xem video chống tua bài, Quản lý lô hàng cận date theo chuẩn FEFO, và Trợ lý AI tư vấn dinh dưỡng tránh dị ứng) cùng **Hệ thống thiết kế UI/UX Selective Glassmorphism**, giúp đồ án đạt độ sâu kỹ thuật và thẩm mỹ thuyết phục trước hội đồng bảo vệ.
 
 ### Chương 1: Tổng quan về đề tài và Bài toán nghiệp vụ
 * **1.1. Lý do chọn đề tài:** Sự bùng nổ của xu hướng chăm sóc sức khỏe cá nhân (Fitness & Wellness) và bài toán phân mảnh khi người tập phải dùng nhiều nền tảng rời rạc (một nơi mua thẻ tập, một nơi mua Whey/Creatine, một nơi xem video hướng dẫn và theo dõi lịch tập).
 * **1.2. Mục tiêu và phạm vi của đề tài:**
   * **Mục tiêu nghiệp vụ:** Xây dựng nền tảng All-in-One kết hợp quản lý hội viên (Check-in bằng mã QR động chống mượn thẻ), đặt lịch PT chống trùng giờ, học trực tuyến qua video (lưu vết tiến độ từng bài), mua sắm thực phẩm bổ sung (quản lý lô hạn sử dụng FEFO) và tư vấn lộ trình thông minh bằng AI theo chỉ số cơ thể (BMI/TDEE) kèm sàng lọc dị ứng (Lactose, Caffeine).
-  * **Mục tiêu kỹ thuật:** Thiết kế kiến trúc tách biệt Frontend/Backend (RESTful API), xử lý giao dịch giỏ hàng hỗn hợp (Hybrid Cart gồm cả sản phẩm vật lý và dịch vụ số), thuật toán xuất kho theo hạn sử dụng (First Expired, First Out), bảo mật mã QR theo thời gian thực (TOTP 60s) và tích hợp cổng thanh toán trực tuyến.
+  * **Mục tiêu kỹ thuật & Trải nghiệm người dùng (UI/UX):** Thiết kế kiến trúc tách biệt Frontend/Backend (RESTful API), xử lý giao dịch giỏ hàng hỗn hợp (Hybrid Cart), thuật toán xuất kho FEFO, bảo mật mã QR theo thời gian thực (TOTP 60s), và xây dựng hệ thống giao diện theo chuẩn **Selective Glassmorphism** giúp tối giản hóa thao tác, chống nhiễu thị giác và dẫn dắt sự tập trung của người dùng.
 * **1.3. Đối tượng sử dụng hệ thống (Actors):** Khách vãng lai (Guest), Hội viên/Khách hàng (Member), Huấn luyện viên cá nhân (Personal Trainer - PT), Quản trị viên (Administrator).
 * **1.4. Phương pháp nghiên cứu và quy trình phát triển phần mềm:** Áp dụng mô hình Agile/Scrum cho quá trình phát triển và UML 2.0 cho phân tích thiết kế.
 
@@ -37,7 +38,7 @@
   * Phân hệ Khách hàng & Hội viên (Tính TDEE, AI Tư vấn dinh dưỡng & lọc dị ứng, Mua sắm giỏ hàng hỗn hợp, Học video lưu tiến độ `user_lesson_progress`, Đặt lịch PT, Hiển thị QR Check-in phòng tập).
   * Phân hệ Huấn luyện viên - PT (Quản lý lịch rảnh, Quét QR Check-in buổi tập cho học viên, Lên giáo án & nhận xét sau buổi tập).
   * Phân hệ Quản trị viên - Admin (Quản lý biến thể thực phẩm bổ sung, Nhập kho theo lô & Cảnh báo hàng cận date `inventory_batches`, Quản lý gói tập/khóa học, Duyệt đơn hàng, Thống kê doanh thu & lợi nhuận gộp).
-* **3.2. Phân tích yêu cầu phi chức năng (Non-Functional Requirements):** Hiệu năng phản hồi API dưới 300ms, chống Race Condition khi hai học viên đặt cùng một ca PT hoặc mua sản phẩm cuối cùng trong lô hàng.
+* **3.2. Phân tích yêu cầu phi chức năng (Non-Functional Requirements):** Hiệu năng phản hồi API dưới 300ms, chống Race Condition khi hai học viên đặt cùng một ca PT hoặc mua sản phẩm cuối cùng trong lô hàng; giao diện đạt chuẩn độ tương phản dễ đọc WCAG AA.
 * **3.3. Thiết kế Sơ đồ Use Case (Use Case Diagrams):**
   * Sơ đồ Use Case tổng quát toàn hệ thống.
   * Các sơ đồ Use Case phân rã và bảng đặc tả chi tiết (Use Case Specification) cho 6 luồng cốt lõi.
@@ -46,7 +47,7 @@
 * **3.5. Thiết kế Cơ sở dữ liệu (Database Design & ERD):**
   * Sơ đồ Thực thể - Liên kết (ERD) mức quan niệm và mức vật lý.
   * Đặc tả chi tiết **19 bảng dữ liệu chuẩn hóa 3NF**.
-* **3.6. Thiết kế Giao diện người dùng (UI/UX Wireframe & Design System):** Bố cục giao diện theo phong cách thể thao hiện đại.
+* **3.6. Thiết kế Hệ thống Giao diện Người dùng (UI/UX Design System) theo phong cách Selective Glassmorphism:** Quy chuẩn phân cấp lớp nền Solid/Gradient nhẹ, lớp kính mờ chọn lọc (Focal Glass Layer), hệ thống Typography đậm nét tương phản cao và bố cục tối giản (Xem chi tiết tại Mục 4).
 
 ### Chương 4: Hiện thực hóa hệ thống và Kiểm thử
 * **4.1. Cấu trúc thư mục dự án (Monorepo hoặc tách Frontend/Backend):** Tổ chức mã nguồn sạch (Clean Architecture).
@@ -168,14 +169,14 @@ Hệ thống gồm **19 bảng dữ liệu chuẩn hóa 3NF** trên PostgreSQL, 
 | `allergies` | `TEXT[]` | `DEFAULT '{}'` | Mảng dị ứng của học viên (VD: `['LACTOSE', 'CAFFEINE']`) |
 | `recorded_at` | `TIMESTAMPTZ` | `DEFAULT NOW()` | Ngày ghi nhận chỉ số |
 
-#### 4. Bảng `ai_consultation_logs` (MỚI - Lưu lịch sử Trợ lý AI tư vấn Thực đơn & Combo)
+#### 4. Bảng `ai_consultation_logs` (Lưu lịch sử Trợ lý AI tư vấn Thực đơn & Combo)
 | Tên cột | Kiểu dữ liệu | Ràng buộc | Mô tả chi tiết |
 | :--- | :--- | :--- | :--- |
 | `id` | `UUID` | `PK` | Khóa chính phiên tư vấn AI |
 | `user_id` | `UUID` | `FK -> users(id)` | Học viên nhận tư vấn |
 | `metrics_log_id` | `UUID` | `FK -> body_metrics_logs(id)` | Dựa trên lần đo TDEE nào |
 | `target_macros` | `JSONB` | `NOT NULL` | Macro mục tiêu (`{calories: 2400, protein_g: 180, carbs_g: 250, fat_g: 70}`) |
-| ` excluded_allergens`| `TEXT[]` | `DEFAULT '{}'` | Các chất gây dị ứng đã được AI lọc bỏ (Lactose, Gluten, Caffeine...) |
+| `excluded_allergens`| `TEXT[]` | `DEFAULT '{}'` | Các chất gây dị ứng đã được AI lọc bỏ (Lactose, Gluten, Caffeine...) |
 | `meal_plan_markdown`| `TEXT` | `NOT NULL` | Thực đơn dinh dưỡng trong ngày do AI sinh ra |
 | `recommended_items` | `JSONB` | `NOT NULL` | Danh sách ID Thực phẩm bổ sung & Khóa học được AI ghép thành Combo |
 | `created_at` | `TIMESTAMPTZ` | `DEFAULT NOW()` | Thời gian tạo bản tư vấn |
@@ -221,7 +222,7 @@ Hệ thống gồm **19 bảng dữ liệu chuẩn hóa 3NF** trên PostgreSQL, 
 | `stock_quantity` | `INT` | `NOT NULL DEFAULT 0` | Tổng tồn kho khả dụng (Cộng dồn từ các lô còn hạn trong `inventory_batches`) |
 | `image_url` | `TEXT` | `NULL` | Ảnh bao bì riêng của biến thể hương vị đó |
 
-#### 8. Bảng `inventory_batches` (MỚI - Quản lý Lô nhập kho & Hạn sử dụng theo chuẩn FEFO)
+#### 8. Bảng `inventory_batches` (Quản lý Lô nhập kho & Hạn sử dụng theo chuẩn FEFO)
 | Tên cột | Kiểu dữ liệu | Ràng buộc | Mô tả chi tiết |
 | :--- | :--- | :--- | :--- |
 | `id` | `UUID` | `PK` | Khóa chính lô hàng |
@@ -275,7 +276,7 @@ Hệ thống gồm **19 bảng dữ liệu chuẩn hóa 3NF** trên PostgreSQL, 
 | `is_free_preview` | `BOOLEAN` | `DEFAULT FALSE` | Cho phép học thử miễn phí hay không |
 | `sort_order` | `INT` | `NOT NULL` | Thứ tự bài học trong chương |
 
-#### 12. Bảng `user_lesson_progress` (MỚI - Lưu vị trí xem Video & Chống tua bài)
+#### 12. Bảng `user_lesson_progress` (Lưu vị trí xem Video & Chống tua bài)
 | Tên cột | Kiểu dữ liệu | Ràng buộc | Mô tả chi tiết |
 | :--- | :--- | :--- | :--- |
 | `id` | `UUID` | `PK` | Khóa chính tiến độ bài học |
@@ -330,7 +331,7 @@ Hệ thống gồm **19 bảng dữ liệu chuẩn hóa 3NF** trên PostgreSQL, 
 | `trainer_notes` | `TEXT` | `NULL` | Nhận xét của PT sau buổi tập |
 | `status` | `ENUM` | `DEFAULT 'CONFIRMED'` | Trạng thái: `CONFIRMED`, `COMPLETED`, `CANCELLED`, `NO_SHOW` |
 
-#### 16. Bảng `gym_checkins` (MỚI - Nhật ký Quét mã QR Động ra vào phòng tập & Điểm danh PT)
+#### 16. Bảng `gym_checkins` (Nhật ký Quét mã QR Động ra vào phòng tập & Điểm danh PT)
 | Tên cột | Kiểu dữ liệu | Ràng buộc | Mô tả chi tiết |
 | :--- | :--- | :--- | :--- |
 | `id` | `UUID` | `PK` | Khóa chính lượt Check-in |
@@ -389,9 +390,37 @@ Hệ thống gồm **19 bảng dữ liệu chuẩn hóa 3NF** trên PostgreSQL, 
 | `unit_price` | `DECIMAL(12,2)` | `NOT NULL` | Đơn giá bán tại thời điểm mua (VNĐ) |
 | `line_total` | `DECIMAL(12,2)` | `NOT NULL` | Thành tiền (`quantity * unit_price`) |
 
-## 4. Mã Khởi Tạo Schema Prisma (`schema.prisma`) Đầy Đủ Cho Next.js + Node.js
+## 4. Đặc Tả Hệ Thống Thiết Kế UI/UX: Selective Glassmorphism (Kính Mờ Chọn Lọc & Tối Giản)
 
-Đoạn mã `schema.prisma` dưới đây đã tích hợp trọn vẹn toàn bộ mô hình cơ sở dữ liệu bao gồm cả 4 tính năng nâng cao (`InventoryBatch`, `UserLessonProgress`, `GymCheckin`, `AiConsultationLog`):
+Để khắc phục hoàn toàn tình trạng giao diện rối rắm, nặng nề thường thấy ở các website thương mại điện tử đa năng, hệ thống **GymHub** áp dụng ngôn ngữ thiết kế **Selective Glassmorphism (Kính mờ có chọn lọc)** kết hợp **Clean Solid Surfaces (Bề mặt đặc tinh gọn)**.
+
+### 4.1. Triết lý cốt lõi: "Kính mờ dẫn dắt điểm nhìn, nền Solid bảo vệ khả năng đọc"
+Thay vì lạm dụng hiệu ứng kính trong suốt (`backdrop-blur`) cho mọi phần tử gây nhiễu thị giác và mỏi mắt, hệ thống phân chia chặt chẽ **3 tầng chiều sâu thị giác (3-Tier Visual Depth Hierarchy)**:
+
+| Tầng thị giác (Visual Layer) | Thành phần áp dụng | Quy chuẩn CSS / Tailwind CSS | Mục đích UX & Khả năng tiếp cận |
+| :--- | :--- | :--- | :--- |
+| **Tầng 0: Nền móng (Base Canvas)** | Toàn bộ nền trang web (`body`, `main`) | Nền sáng thanh lịch (`bg-slate-50`) kết hợp dải **Mesh Gradient cực nhẹ** ở phần đầu trang (`bg-gradient-to-br from-slate-50 via-teal-50/40 to-indigo-50/40`). Tuyệt đối không dùng ảnh nền rối mắt xuyên suốt trang. | Tạo không gian thoáng đãng, sạch sẽ và làm chất xúc tác để các lớp kính mờ phía trên nổi bật tự nhiên. |
+| **Tầng 1: Bề mặt Nội dung Đọc (Solid Content Surfaces - 75% diện tích)** | Danh sách thẻ sản phẩm Whey, Bảng thông số dinh dưỡng, Bảng dữ liệu lô hàng FEFO, Lịch sử đơn hàng, Ô nhập liệu Form (`input`, `select`). | **Nền đặc hoàn toàn (`bg-white`)**, viền mảnh sắc nét (`border border-slate-200/80`), bo góc mềm (`rounded-2xl`), đổ bóng mịn (`shadow-sm hover:shadow-md transition-all`). | Đảm bảo **độ tương phản tối đa** cho chữ viết, giá tiền, hạn sử dụng và bảng biểu. Người dùng đọc thông tin lâu không bị hoa mắt. |
+| **Tầng 2: Lớp Kính Mờ Chọn Lọc (Selective Glass Layer - 25% điểm nhấn)** | Chỉ áp dụng cho **5 thành phần dẫn dắt sự tập trung**:<br>1. Thanh điều hướng nổi (`Sticky Navbar`)<br>2. Khối tiêu điểm Hero / Tóm tắt chỉ số TDEE & Macro<br>3. Ngăn kéo Giỏ hàng hỗn hợp (`Slide-over Cart Drawer`)<br>4. Thẻ Hội viên & Mã QR Động 60s (`Member QR Pass`)<br>5. Hộp thoại xác nhận / Thông báo nổi (`Modal / Toast`) | `bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(15,23,42,0.06)] rounded-3xl` (Hoặc kính tối điểm nhấn cho Thẻ VIP QR: `bg-slate-900/80 backdrop-blur-xl border border-white/15 text-white`). | Tách biệt rõ lớp điều hướng và các thẻ tương tác quan trọng nổi hẳn lên trên bề mặt nội dung, tạo chiều sâu tinh tế như hệ điều hành macOS / iOS. |
+
+### 4.2. Quy chuẩn Typography & Độ tương phản (High-Contrast Typography)
+* **Font chữ chủ đạo:** `Plus Jakarta Sans` hoặc `Inter` cho văn bản giao diện; `JetBrains Mono` cho Mã lô hàng (`LOT-2026`), Mã QR Token và Giá tiền.
+* **Độ đậm và Tương phản chữ trên nền kính:**
+  * Tiêu đề chính (Headings): Bắt buộc dùng font đậm (`font-bold` hoặc `font-extrabold`, `tracking-tight`, màu `text-slate-900`) để nét chữ sắc sảo, không bị nhòe vào hiệu ứng blur phía sau.
+  * Văn bản thông tin (Body text): Màu `text-slate-700` (`font-medium`), tuyệt đối không dùng chữ xám nhạt (`text-slate-400`) trên nền kính mờ.
+* **Bảng màu tinh gọn (3-Color Rule):**
+  * **Màu chủ đạo (Primary Focus):** Xanh Ngọc Lục Bảo Đậm (`emerald-600` / `#059669`) — đại diện cho Sức khỏe, Dinh dưỡng sạch và trạng thái Hoàn thành/An toàn.
+  * **Màu hành động (Secondary Accent):** Xanh Chàm Hiện Đại (`indigo-600` / `#4F46E5`) — dùng cho Khóa học Online, Trợ lý AI và Đặt lịch PT.
+  * **Màu cảnh báo nghiệp vụ (Semantic Status):** Cam Hổ Phách (`amber-600` cho Lô hàng cận date dưới 60 ngày) và Đỏ San Hô (`rose-600` cho Lô hết hạn hoặc Cảnh báo dị ứng Lactose/Caffeine).
+
+### 4.3. Quy tắc Bố cục Tinh Gọn (Anti-Clutter Layout Rules)
+1. **Không lồng kính trong kính (No Nested Glass):** Một thẻ kính mờ (`backdrop-blur`) không bao giờ chứa một thẻ `backdrop-blur` khác bên trong. Các phần tử con nằm trong панель kính mờ phải dùng nền đặc (`bg-white` hoặc `bg-slate-900/5`).
+2. **Khoảng thở rộng rãi (Generous Whitespace):** Mỗi hàng chỉ hiển thị tối đa **3 đến 4 thẻ sản phẩm/khóa học** (`gap-6`), padding bên trong thẻ tối thiểu `p-6` để giao diện thoáng và sang trọng.
+3. **Tối giản thông tin trên Card:** Mỗi thẻ sản phẩm ở trang danh sách chỉ hiển thị đúng 4 thông tin: Ảnh sản phẩm, Tên + Thương hiệu, Nhãn mục tiêu/Không dị ứng (1-2 badge nhỏ gọn), và Giá bán + Nút thêm vào giỏ. Mọi thông số chi tiết (Nutrition Facts, danh sách Lô hàng FEFO) chỉ hiển thị khi mở Modal hoặc trang chi tiết.
+
+## 5. Mã Khởi Tạo Schema Prisma (`schema.prisma`) Đầy Đủ Cho Next.js + Node.js
+
+Đoạn mã `schema.prisma` dưới đây giữ nguyên toàn bộ 19 bảng chuẩn 3NF của hệ thống:
 
 ```prisma
 datasource db {

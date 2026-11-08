@@ -3,32 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Custom scrollbar for dark athletic theme */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+@layer components {
+  /* Tầng 0: Nền móng Mesh Gradient dịu nhẹ */
+  .mesh-canvas {
+    @apply bg-slate-50 bg-gradient-to-br from-slate-50 via-emerald-50/40 to-indigo-50/40;
+  }
 
-::-webkit-scrollbar-track {
-  background: #0f172a;
-}
+  /* Tầng 1: Bề mặt Nội dung Đọc (Solid Content Surfaces - 75% diện tích) */
+  .solid-card {
+    @apply bg-white border border-slate-200/80 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_30px_rgba(15,23,42,0.08)] transition-all;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
-}
+  /* Tầng 2: Lớp Kính Mờ Chọn Lọc (Selective Glass Layer - 25% điểm nhấn) */
+  .glass-panel {
+    @apply bg-white/75 backdrop-blur-xl border border-white/70 shadow-[0_8px_32px_rgba(15,23,42,0.06)] rounded-3xl;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  /* Thẻ Hội Viên VIP & Mã QR Động 60s (Dark Luxury Glass Pass) */
+  .glass-dark-pass {
+    @apply bg-slate-900/85 backdrop-blur-xl border border-white/15 text-white rounded-3xl shadow-xl;
+  }
 }
-

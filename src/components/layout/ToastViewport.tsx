@@ -21,31 +21,31 @@ export function ToastViewport() {
             ? XCircle
             : Info;
 
-        const borderClass =
+        const iconColor =
           t.type === "success"
-            ? "border-emerald-500/50 bg-slate-900/95 text-emerald-300"
+            ? "text-emerald-600"
             : t.type === "warning"
-            ? "border-amber-500/50 bg-slate-900/95 text-amber-300"
+            ? "text-amber-600"
             : t.type === "error"
-            ? "border-rose-500/50 bg-slate-900/95 text-rose-300"
-            : "border-sky-500/50 bg-slate-900/95 text-sky-300";
+            ? "text-rose-600"
+            : "text-indigo-600";
 
         return (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 rounded-xl border p-3.5 shadow-xl backdrop-blur-md transition ${borderClass}`}
+            className="pointer-events-auto flex items-start gap-3 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/80 p-4 shadow-[0_8px_32px_rgba(15,23,42,0.1)]"
           >
-            <Icon className="h-5 w-5 shrink-0 mt-0.5" />
+            <Icon className={`h-5 w-5 shrink-0 mt-0.5 ${iconColor}`} />
             <div className="flex-1 text-xs">
-              <div className="font-bold text-white">{t.title}</div>
+              <div className="font-bold text-slate-900">{t.title}</div>
               {t.description && (
-                <div className="mt-0.5 text-slate-300 leading-relaxed">{t.description}</div>
+                <div className="mt-0.5 font-medium text-slate-700">{t.description}</div>
               )}
             </div>
             <button
               type="button"
               onClick={() => dismissToast(t.id)}
-              className="text-slate-400 hover:text-white"
+              className="text-slate-400 hover:text-slate-800"
             >
               <X className="h-4 w-4" />
             </button>
@@ -55,4 +55,3 @@ export function ToastViewport() {
     </div>
   );
 }
-

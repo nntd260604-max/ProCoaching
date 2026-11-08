@@ -1,14 +1,20 @@
-# GYMHUB HYBRID PLATFORM - PROJECT RULES
+# GYMHUB HYBRID PLATFORM - ARCHITECTURE & DESIGN SYSTEM RULES
 
-## 1. Domain Rules (Mandatory)
+## 1. UI/UX Design System: Selective Glassmorphism (MANDATORY)
+- **Visual Philosophy**: Glassmorphism is used selectively to guide user focus and create depth, NEVER overused across every element. Prioritize clear visual hierarchy, high text contrast, and uncluttered layouts.
+- **3-Tier Surface Hierarchy**:
+  1. **Base Canvas**: Clean light background (`bg-slate-50`) paired with a subtle top mesh gradient (`bg-gradient-to-br from-slate-50 via-emerald-50/40 to-indigo-50/40`). Never use noisy background photos or heavy all-black screens.
+  2. **Solid Content Surfaces (75% of UI)**: Product cards, data tables (FEFO batches, orders), forms, inputs, and lesson lists MUST use crisp solid backgrounds (`bg-white border border-slate-200/80 rounded-2xl shadow-sm`) to guarantee effortless readability.
+  3. **Selective Glass Surfaces (25% Focal Elements)**: Apply `bg-white/75 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(15,23,42,0.06)] rounded-3xl` ONLY to focal components: Sticky Navbar, Hero TDEE/Macro Summary Card, Slide-over Hybrid Cart Drawer, Member 60s QR Pass, and Modals.
+- **Anti-Clutter & Typography**:
+  - Never nest a `backdrop-blur` element inside another `backdrop-blur` element.
+  - Use bold, high-contrast typography (`font-bold text-slate-900` for headings/metrics, `font-medium text-slate-700` for body copy).
+  - Keep cards minimal (max 3-4 data points per grid card; generous `p-6` padding and `gap-6` grid spacing).
+
+## 2. Core Business Logic Rules
 - **Hybrid Cart**: An `Order` can contain both `SUPPLEMENT_VARIANT` (physical goods requiring shipping & FEFO batch allocation) and `COURSE_MEMBERSHIP` (digital courses/gym passes activated immediately upon payment).
-- **FEFO Inventory Allocation**: Never deduct stock blindly from `SupplementVariant`. Always query `InventoryBatch` where `remainingQuantity > 0` and `expiryDate > now()`, ordered by `expiryDate ASC` (First Expired, First Out), deduct from the earliest expiring batch, and record `allocatedBatchId` in `OrderItem`.
-- **Dynamic QR Check-in**: Member gym passes generate a time-based 60-second token using `qrSecretKey`. Scanning a `PT_SESSION` QR marks the `PtBooking` as `COMPLETED`, decrements `remainingPtSessions` on `UserEnrollment`, and inserts a `GymCheckin` record inside a single database transaction.
+- **FEFO Inventory Allocation**: Always query `InventoryBatch` where `remainingQuantity > 0` and `expiryDate > now()`, ordered by `expiryDate ASC` (First Expired, First Out), deduct from the earliest expiring batch, and record `allocatedBatchId` in `OrderItem`.
+- **Dynamic QR Check-in**: Member gym passes generate a time-based 60-second token using `qrSecretKey`. Scanning a `PT_SESSION` QR marks the `PtBooking` as `COMPLETED`, decrements `remainingPtSessions` on `UserEnrollment`, and inserts a `GymCheckin` record.
 - **Anti-Skip Video Progress**: A `CourseLesson` is only marked `isCompleted = true` in `UserLessonProgress` when `watchedSeconds >= durationSeconds * 0.8`.
-- **Allergen-Safe AI Recommendation**: Always filter out `SupplementProduct` items whose `allergenTags` overlap with the user's selected `allergies` (e.g., `LACTOSE`, `HIGH_CAFFEINE`) before recommending combos.
-
-## 2. UI & Coding Standards
-- All user-facing text, labels, mock data, and error messages MUST be in natural Vietnamese.
-- Provide a quick "Chuyển vai trò Demo (Hội viên / PT / Admin)" switcher in the top navigation bar so the graduation defense committee can test all 3 portals without logging out and typing passwords repeatedly.
-- Never leave `// TODO` or empty mock buttons; every button must trigger real state updates or API calls with toast notifications.
-
+- **Allergen-Safe AI Recommendation**: Always filter out `SupplementProduct` items whose `allergenTags` overlap with the user's selected `allergies` (`LACTOSE`, `HIGH_CAFFEINE`) before recommending combos.
+- **Language & Demo Switcher**: All UI text must be in natural Vietnamese. Include a compact Role Switcher (`Hội viên` / `PT` / `Admin`) in the sticky glass navbar for defense demonstration.

@@ -6,9 +6,9 @@ import { ToastViewport } from "@/components/layout/ToastViewport";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "GymHub Hybrid Platform | Hệ Thống Quản Lý Phòng Tập, Khóa Học Video & Thực Phẩm Bổ Sung FEFO",
+  title: "GymHub | Hệ Thống Phòng Tập, Khóa Học Online & Thực Phẩm Bổ Sung",
   description:
-    "Đồ án tốt nghiệp Kỹ thuật phần mềm: Quản lý hội viên bằng mã QR động 60s, Đặt lịch PT 1-1 chống trùng ca, Khóa học Video chống tua 80%, Tư vấn TDEE AI lọc dị ứng và Xuất kho Thực phẩm bổ sung theo chuẩn FEFO.",
+    "Nền tảng quản lý thẻ tập QR động, đặt lịch huấn luyện viên cá nhân 1-1, khóa học video trực tuyến và cửa hàng thực phẩm bổ sung chuẩn FEFO.",
 };
 
 export default function RootLayout({
@@ -17,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className="dark">
-      <body className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
+    <html lang="vi">
+      <body className="min-h-screen flex flex-col mesh-canvas text-slate-900 antialiased selection:bg-emerald-600 selection:text-white">
         <Navbar />
         <HybridCartDrawer />
         <ToastViewport />
@@ -28,4 +28,3 @@ export default function RootLayout({
     </html>
   );
 }
-

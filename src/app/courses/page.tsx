@@ -8,8 +8,6 @@ import {
   UserCheck,
   Calendar,
   ShoppingBag,
-  Sparkles,
-  CheckCircle2,
 } from "lucide-react";
 import { useHybridCartStore } from "@/store/useHybridCartStore";
 
@@ -54,66 +52,65 @@ export default function CoursesPage() {
 
   const typeLabels: Record<string, { label: string; badgeClass: string }> = {
     HYBRID_COMBO: {
-      label: "HYBRID_COMBO (Thẻ Tập + PT + Video)",
-      badgeClass: "bg-gradient-to-r from-emerald-500 to-orange-500 text-slate-950",
+      label: "Gói Toàn Diện (Thẻ Tập + PT + Video)",
+      badgeClass: "bg-indigo-600 text-white",
     },
     ONLINE_VIDEO: {
-      label: "ONLINE_VIDEO (Khóa Học Video)",
-      badgeClass: "bg-sky-500 text-slate-950",
+      label: "Khóa Học Video",
+      badgeClass: "bg-emerald-600 text-white",
     },
     PT_PACKAGE: {
-      label: "PT_PACKAGE (Gói Kèm PT 1-1)",
-      badgeClass: "bg-orange-500 text-slate-950",
+      label: "Huấn Luyện Kèm PT 1-1",
+      badgeClass: "bg-indigo-600 text-white",
     },
     GYM_MEMBERSHIP: {
-      label: "GYM_MEMBERSHIP (Thẻ Tập QR 60s)",
-      badgeClass: "bg-emerald-500 text-slate-950",
+      label: "Thẻ Hội Viên Phòng Tập",
+      badgeClass: "bg-emerald-600 text-white",
     },
   };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 space-y-8">
-      {/* Header */}
-      <div className="rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/30 p-6 sm:p-8">
-        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-400">
-          <PlaySquare className="h-3.5 w-3.5" />
-          Kích Hoạt Kỹ Thuật Số Ngay Sau Khi Thanh Toán (`user_enrollments`)
+      {/* Top Focal Glass Panel */}
+      <div className="glass-panel p-6 sm:p-8 space-y-5">
+        <div>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-bold text-indigo-700">
+            <PlaySquare className="h-3.5 w-3.5" />
+            Kích Hoạt Tự Động Ngay Sau Khi Thanh Toán
+          </div>
+          <h1 className="mt-2.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Khóa Tập Video, Thẻ Hội Viên & Gói Kèm PT 1-1
+          </h1>
+          <p className="mt-1 text-sm font-medium text-slate-700 max-w-3xl">
+            Mở khóa ngay giáo trình video hướng dẫn kỹ thuật, cấp thẻ QR ra vào phòng tập và đặt lịch tập 1-1 cùng Huấn luyện viên.
+          </p>
         </div>
-        <h1 className="mt-3 text-2xl sm:text-4xl font-black text-white">
-          Khóa Học Video Trực Tuyến, Thẻ Tập QR & Gói Huấn Luyện PT 1-1
-        </h1>
-        <p className="mt-2 text-sm text-slate-300 max-w-3xl">
-          Sau khi thanh toán, hệ thống tự động sinh khóa bí mật{" "}
-          <code className="rounded bg-slate-800 px-1.5 py-0.5 text-emerald-300">qr_secret_key</code>{" "}
-          để mở thẻ ra vào phòng tập 60 giây, cộng số buổi PT 1-1 và mở khóa toàn bộ bài giảng Video chống tua bài.
-        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: "ALL", label: "Tất cả gói tập" },
+            { id: "HYBRID_COMBO", label: "Gói Toàn Diện" },
+            { id: "PT_PACKAGE", label: "Huấn Luyện PT 1-1" },
+            { id: "ONLINE_VIDEO", label: "Khóa Học Video" },
+            { id: "GYM_MEMBERSHIP", label: "Thẻ Phòng Tập" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSelectedType(tab.id)}
+              className={`rounded-xl border px-4 py-2 text-xs font-bold transition ${
+                selectedType === tab.id
+                  ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { id: "ALL", label: "Tất cả Gói Tập & Khóa Học" },
-          { id: "HYBRID_COMBO", label: "Combo Toàn Diện (HYBRID_COMBO)" },
-          { id: "PT_PACKAGE", label: "Huấn Luyện PT 1-1 (PT_PACKAGE)" },
-          { id: "ONLINE_VIDEO", label: "Khóa Học Video (ONLINE_VIDEO)" },
-          { id: "GYM_MEMBERSHIP", label: "Thẻ Phòng Tập (GYM_MEMBERSHIP)" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setSelectedType(tab.id)}
-            className={`rounded-xl border px-4 py-2.5 text-xs font-bold transition ${
-              selectedType === tab.id
-                ? "border-emerald-500 bg-emerald-500 text-slate-950"
-                : "border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Course Cards */}
+      {/* Course Grid: Solid White Cards */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {filtered.map((course) => {
           const tInfo = typeLabels[course.courseType] || typeLabels.ONLINE_VIDEO;
@@ -125,75 +122,81 @@ export default function CoursesPage() {
           return (
             <div
               key={course.id}
-              className="flex flex-col justify-between rounded-3xl border border-slate-800 bg-slate-900/75 overflow-hidden hover:border-emerald-500/50 transition"
+              className="solid-card p-6 flex flex-col justify-between hover:border-indigo-300 transition"
             >
-              <div>
-                <div className="relative h-60 bg-slate-950">
+              <div className="space-y-4">
+                <Link
+                  href={`/courses/${course.slug}`}
+                  className="relative block h-56 overflow-hidden rounded-xl border border-slate-100 bg-slate-100"
+                >
                   <img
                     src={course.thumbnailUrl}
                     alt={course.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover hover:scale-105 transition duration-300"
                   />
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                    <span
-                      className={`rounded-lg px-3 py-1 text-xs font-black shadow-md ${tInfo.badgeClass}`}
-                    >
-                      {tInfo.label}
-                    </span>
-                  </div>
+                  <span
+                    className={`absolute top-3 left-3 rounded-lg px-3 py-1 text-xs font-bold shadow-sm ${tInfo.badgeClass}`}
+                  >
+                    {tInfo.label}
+                  </span>
+                </Link>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-emerald-700">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Thời hạn {course.durationDays} ngày
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-indigo-700">
+                    <UserCheck className="h-3.5 w-3.5" />
+                    {course.ptSessionsIncluded > 0
+                      ? `${course.ptSessionsIncluded} buổi PT 1-1`
+                      : "Tự học Video"}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-slate-700">
+                    <QrCode className="h-3.5 w-3.5 text-emerald-600" />
+                    Thẻ QR phòng tập
+                  </span>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1 font-semibold text-emerald-400">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Thời hạn: {course.durationDays} ngày
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1 font-semibold text-orange-400">
-                      <UserCheck className="h-3.5 w-3.5" />
-                      {course.ptSessionsIncluded > 0
-                        ? `Tặng ${course.ptSessionsIncluded} buổi PT 1-1`
-                        : "Tự học Video Online"}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1 font-semibold text-sky-400">
-                      <QrCode className="h-3.5 w-3.5" />
-                      Cấp Thẻ QR Động 60s
-                    </span>
-                  </div>
-
+                <div>
                   <Link
                     href={`/courses/${course.slug}`}
-                    className="block text-xl font-black text-white hover:text-emerald-400 transition"
+                    className="block text-xl font-extrabold text-slate-900 hover:text-indigo-600 transition"
                   >
                     {course.title}
                   </Link>
-
-                  <p className="text-xs leading-relaxed text-slate-400">
+                  <p className="mt-1 text-xs font-medium leading-relaxed text-slate-600 line-clamp-2">
                     {course.description}
                   </p>
+                </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3.5 text-xs space-y-1.5">
-                    <div className="font-bold text-slate-200">
-                      Giảng viên / HLV phụ trách:{" "}
-                      <span className="text-emerald-400">{course.trainerName}</span>
-                    </div>
-                    <div className="text-slate-400">
-                      Giáo trình bao gồm: <strong>{course.modules.length} chương</strong> •{" "}
-                      <strong>{totalLessons} bài giảng video kỹ thuật</strong>
-                    </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs space-y-1">
+                  <div className="font-bold text-slate-800">
+                    Huấn luyện viên:{" "}
+                    <span className="text-indigo-600">{course.trainerName}</span>
+                  </div>
+                  <div className="font-medium text-slate-600">
+                    Giáo trình: <strong>{course.modules.length} chương</strong> •{" "}
+                    <strong>{totalLessons} bài giảng video</strong>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 pt-0 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/80 mt-2">
-                <div className="pt-4">
-                  <div className="text-xs text-slate-400">Trọn gói (Không phát sinh phụ phí)</div>
-                  <div className="text-2xl font-black text-emerald-400">
+              <div className="pt-5 mt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="text-xs font-medium text-slate-500">Học phí trọn gói</div>
+                  <div className="font-mono text-2xl font-extrabold text-slate-900">
                     {course.price.toLocaleString("vi-VN")}đ
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 pt-4">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/courses/${course.slug}`}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+                  >
+                    Xem giáo trình
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {
@@ -209,17 +212,11 @@ export default function CoursesPage() {
                       });
                       setCartOpen(true);
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 hover:bg-emerald-400 transition"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition shadow-sm"
                   >
-                    <ShoppingBag className="h-4 w-4" />
-                    Đăng Ký Gói Ngay
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    Đăng ký ngay
                   </button>
-                  <Link
-                    href={`/courses/${course.slug}`}
-                    className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-xs font-semibold text-white hover:bg-slate-700"
-                  >
-                    Xem Giáo Trình
-                  </Link>
                 </div>
               </div>
             </div>
@@ -229,4 +226,3 @@ export default function CoursesPage() {
     </div>
   );
 }
-
