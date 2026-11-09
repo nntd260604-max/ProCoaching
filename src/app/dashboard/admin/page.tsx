@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, startTransition } from "react";
 import {
   ShieldCheck,
   Package,
@@ -14,9 +14,10 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useHybridCartStore } from "@/store/useHybridCartStore";
+import { GlassPanel, SolidCard } from "@/components/ui/Surface";
 
 export default function AdminDashboardPage() {
-  const { pushToast } = useHybridCartStore();
+  const pushToast = useHybridCartStore((s) => s.pushToast);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [adminData, setAdminData] = useState<any>(null);
@@ -72,7 +73,7 @@ export default function AdminDashboardPage() {
         type: "success",
       });
       await loadAdminData();
-      setActiveTab("WAREHOUSE_FEFO");
+      startTransition(() => setActiveTab("WAREHOUSE_FEFO"));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Không thể nhập lô";
       pushToast({ title: "Lỗi nhập kho", description: msg, type: "error" });
@@ -117,7 +118,8 @@ export default function AdminDashboardPage() {
     if (res.ok) {
       pushToast({
         title: `Xác nhận thanh toán đơn ${orderCode}!`,
-        description: "Trạng thái đơn hàng đã cập nhật sang Đã thanh toán & Đang giao.",
+        description:
+          "Trạng thái đơn hàng đã cập nhật sang Đã thanh toán & Đang giao.",
         type: "success",
       });
       await loadAdminData();
@@ -133,7 +135,8 @@ export default function AdminDashboardPage() {
     if (res.ok) {
       pushToast({
         title: "Đã khôi phục dữ liệu mẫu ban đầu!",
-        description: "Toàn bộ tồn kho lô hàng và lịch tập đã trở về trạng thái chuẩn.",
+        description:
+          "Toàn bộ tồn kho lô hàng và lịch tập đã trở về trạng thái chuẩn.",
         type: "info",
       });
       await loadAdminData();
@@ -143,7 +146,7 @@ export default function AdminDashboardPage() {
   if (!adminData) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-16 text-center text-sm font-medium text-slate-600">
-        Đang tải dữ liệu Quản trị Kho & Báo cáo Doanh thu...
+        Đang tải dữ liệu Quản trị Kho & Báo cáo Doanh thu…
       </div>
     );
   }
@@ -153,15 +156,16 @@ export default function AdminDashboardPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
       {/* Top Admin Header */}
-      <div className="solid-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <SolidCard className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
-            <ShieldCheck className="h-3.5 w-3.5" /> Quản Trị Hệ Thống & Kho Lô Hàng
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> Quản Trị
+            Hệ Thống & Kho Lô Hàng
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mt-1 text-balance">
             Quản Trị Kho Hàng Theo Hạn Dùng (FEFO) & Doanh Thu
           </h1>
-          <p className="text-xs font-medium text-slate-600 mt-1">
+          <p className="text-xs font-medium text-slate-600 mt-1 text-pretty">
             Theo dõi tồn kho từng lô nhập, cảnh báo lô sắp hết hạn dưới 60 ngày và thống kê lợi nhuận gộp thực tế.
           </p>
         </div>
@@ -169,74 +173,89 @@ export default function AdminDashboardPage() {
         <button
           type="button"
           onClick={handleResetDemo}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition self-start md:self-auto"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors self-start md:self-auto"
         >
-          <RefreshCw className="h-3.5 w-3.5 text-emerald-600" />
+          <RefreshCw
+            className="h-3.5 w-3.5 text-emerald-600"
+            aria-hidden="true"
+          />
           Khôi Phục Dữ Liệu Mẫu
         </button>
-      </div>
+      </SolidCard>
 
       {/* Top Glass KPI Strip (4 Focal Glass Cards) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="glass-panel p-5">
+        <GlassPanel className="p-5">
           <div className="flex items-center justify-between text-xs font-bold text-slate-600">
             <span>Doanh Thu Gói Tập & Khóa Học</span>
-            <TrendingUp className="h-4 w-4 text-indigo-600" />
+            <TrendingUp
+              className="h-4 w-4 text-indigo-600"
+              aria-hidden="true"
+            />
           </div>
-          <div className="font-mono text-2xl font-extrabold text-indigo-700 mt-2">
+          <div className="font-mono text-2xl font-extrabold text-indigo-700 mt-2 tabular-nums">
             {metrics.serviceRevenue.toLocaleString("vi-VN")}đ
           </div>
           <div className="text-[11px] font-medium text-slate-500 mt-1">
             Biên lợi nhuận dịch vụ số: ~100%
           </div>
-        </div>
+        </GlassPanel>
 
-        <div className="glass-panel p-5">
+        <GlassPanel className="p-5">
           <div className="flex items-center justify-between text-xs font-bold text-slate-600">
             <span>Doanh Thu Thực Phẩm Bổ Sung</span>
-            <Package className="h-4 w-4 text-emerald-600" />
+            <Package className="h-4 w-4 text-emerald-600" aria-hidden="true" />
           </div>
-          <div className="font-mono text-2xl font-extrabold text-slate-900 mt-2">
+          <div className="font-mono text-2xl font-extrabold text-slate-900 mt-2 tabular-nums">
             {metrics.supplementRevenue.toLocaleString("vi-VN")}đ
           </div>
-          <div className="text-[11px] font-medium text-slate-500 mt-1">
+          <div className="text-[11px] font-medium text-slate-500 mt-1 tabular-nums">
             Giá vốn lô xuất: {metrics.supplementCogs.toLocaleString("vi-VN")}đ
           </div>
-        </div>
+        </GlassPanel>
 
-        <div className="glass-panel p-5">
+        <GlassPanel className="p-5">
           <div className="flex items-center justify-between text-xs font-bold text-slate-600">
             <span>Lợi Nhuận Gộp Thực Tế</span>
-            <DollarSign className="h-4 w-4 text-emerald-600" />
+            <DollarSign
+              className="h-4 w-4 text-emerald-600"
+              aria-hidden="true"
+            />
           </div>
-          <div className="font-mono text-2xl font-extrabold text-emerald-600 mt-2">
+          <div className="font-mono text-2xl font-extrabold text-emerald-600 mt-2 tabular-nums">
             +{metrics.supplementGrossProfit.toLocaleString("vi-VN")}đ
           </div>
           <div className="text-[11px] font-medium text-slate-500 mt-1">
             Giá bán trừ Giá nhập của đúng lô đã xuất
           </div>
-        </div>
+        </GlassPanel>
 
-        <div className="glass-panel p-5 border-amber-200/90">
+        <GlassPanel className="p-5 border-amber-200/90">
           <div className="flex items-center justify-between text-xs font-bold text-amber-800">
             <span>Lô Hàng Sắp Hết Hạn (&lt;60 ngày)</span>
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertTriangle
+              className="h-4 w-4 text-amber-600"
+              aria-hidden="true"
+            />
           </div>
-          <div className="font-mono text-2xl font-extrabold text-amber-600 mt-2">
+          <div className="font-mono text-2xl font-extrabold text-amber-600 mt-2 tabular-nums">
             {metrics.nearExpiryCount} lô cận hạn
           </div>
-          <div className="text-[11px] font-semibold text-rose-600 mt-1">
+          <div className="text-[11px] font-semibold text-rose-600 mt-1 tabular-nums">
             {metrics.expiredCount} lô đã hết hạn (Tự động khóa xuất)
           </div>
-        </div>
+        </GlassPanel>
       </div>
 
       {/* Near-Expiry Alert Strip (< 60 days) */}
-      {nearExpiryBatches.length > 0 && (
-        <div className="solid-card p-6 border-amber-300 bg-amber-50/40 space-y-4">
+      {nearExpiryBatches.length > 0 ? (
+        <SolidCard className="p-6 border-amber-300 bg-amber-50/40 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm font-extrabold text-amber-900">
-              <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+              <AlertTriangle
+                className="h-5 w-5 text-amber-600 shrink-0"
+                aria-hidden="true"
+              />
               Cần Xử Lý: Các Lô Hàng Sắp Hết Hạn Sử Dụng (Còn Dưới 60 Ngày)
             </div>
             <span className="text-xs font-semibold text-amber-800">
@@ -254,10 +273,13 @@ export default function AdminDashboardPage() {
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="rounded-md bg-amber-100 border border-amber-300 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-900">
+                      <span
+                        className="rounded-md bg-amber-100 border border-amber-300 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-900"
+                        translate="no"
+                      >
                         {b.batchCode}
                       </span>
-                      <span className="font-bold text-amber-700">
+                      <span className="font-bold text-amber-700 tabular-nums">
                         Còn {b.daysUntilExpiry} ngày
                       </span>
                     </div>
@@ -266,17 +288,17 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="font-medium text-slate-600">
                       {b.variantFlavor} ({b.variantWeight}) • Tồn lô:{" "}
-                      <strong className="text-slate-900">
+                      <strong className="text-slate-900 tabular-nums">
                         {b.remainingQuantity} hộp
                       </strong>
                     </div>
                     <div className="font-medium text-slate-600">
                       Giá vốn:{" "}
-                      <span className="font-mono">
+                      <span className="font-mono tabular-nums">
                         {b.importPrice.toLocaleString("vi-VN")}đ
                       </span>{" "}
                       • Giá bán:{" "}
-                      <strong className="font-mono text-emerald-700">
+                      <strong className="font-mono text-emerald-700 tabular-nums">
                         {(b.variantSalePrice ?? b.variantPrice).toLocaleString(
                           "vi-VN"
                         )}
@@ -290,61 +312,75 @@ export default function AdminDashboardPage() {
                     onClick={() =>
                       handleFlashSaleNearExpiry(b.variantId, b.productName)
                     }
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition-colors"
                   >
-                    <Zap className="h-3.5 w-3.5" />
+                    <Zap className="h-3.5 w-3.5" aria-hidden="true" />
                     Kích Hoạt Flash Sale -25% Xả Kho
                   </button>
                 </div>
               )
             )}
           </div>
-        </div>
-      )}
+        </SolidCard>
+      ) : null}
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2.5">
+      <div
+        role="tablist"
+        aria-label="Các mục quản trị kho và đơn hàng"
+        className="flex flex-wrap gap-2.5"
+      >
         <button
           type="button"
-          onClick={() => setActiveTab("WAREHOUSE_FEFO")}
-          className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-xs sm:text-sm font-bold transition ${
+          role="tab"
+          aria-selected={activeTab === "WAREHOUSE_FEFO"}
+          onClick={() =>
+            startTransition(() => setActiveTab("WAREHOUSE_FEFO"))
+          }
+          className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-xs sm:text-sm font-bold transition-colors ${
             activeTab === "WAREHOUSE_FEFO"
               ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <Layers className="h-4 w-4" />
+          <Layers className="h-4 w-4" aria-hidden="true" />
           Danh Sách Lô Hàng FEFO ({batches.length} lô)
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("IMPORT_BATCH")}
-          className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-xs sm:text-sm font-bold transition ${
+          role="tab"
+          aria-selected={activeTab === "IMPORT_BATCH"}
+          onClick={() => startTransition(() => setActiveTab("IMPORT_BATCH"))}
+          className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-xs sm:text-sm font-bold transition-colors ${
             activeTab === "IMPORT_BATCH"
               ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <PlusCircle className="h-4 w-4" />
+          <PlusCircle className="h-4 w-4" aria-hidden="true" />
           Nhập Lô Hàng Mới
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("ORDERS_WEBHOOK")}
-          className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-xs sm:text-sm font-bold transition ${
+          role="tab"
+          aria-selected={activeTab === "ORDERS_WEBHOOK"}
+          onClick={() =>
+            startTransition(() => setActiveTab("ORDERS_WEBHOOK"))
+          }
+          className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-xs sm:text-sm font-bold transition-colors ${
             activeTab === "ORDERS_WEBHOOK"
               ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <CheckCircle2 className="h-4 w-4" />
+          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
           Đơn Hàng & Đối Soát Lô Xuất ({orders.length})
         </button>
       </div>
 
       {/* TAB 1: CRISP SOLID WHITE FEFO INVENTORY TABLE */}
-      {activeTab === "WAREHOUSE_FEFO" && (
-        <div className="solid-card overflow-hidden">
+      {activeTab === "WAREHOUSE_FEFO" ? (
+        <SolidCard className="overflow-hidden">
           <div className="p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h2 className="text-lg font-extrabold text-slate-900">
@@ -382,9 +418,12 @@ export default function AdminDashboardPage() {
                         : "bg-slate-100 border-slate-200 text-slate-600";
 
                     return (
-                      <tr key={b.id} className="hover:bg-slate-50/80 transition">
+                      <tr
+                        key={b.id}
+                        className="hover:bg-slate-50/80 transition-colors"
+                      >
                         <td className="px-5 py-4 font-mono font-bold text-slate-900">
-                          {b.batchCode}
+                          <span translate="no">{b.batchCode}</span>
                           <div className="text-[11px] font-sans font-medium text-slate-500 mt-0.5">
                             {b.supplierName}
                           </div>
@@ -395,23 +434,26 @@ export default function AdminDashboardPage() {
                           </div>
                           <div className="font-medium text-slate-600 mt-0.5">
                             {b.variantFlavor} • {b.variantWeight} (Mã:{" "}
-                            <span className="font-mono">{b.variantSku}</span>)
+                            <span className="font-mono" translate="no">
+                              {b.variantSku}
+                            </span>
+                            )
                           </div>
                         </td>
-                        <td className="px-5 py-4 font-mono font-bold text-slate-800">
+                        <td className="px-5 py-4 font-mono font-bold text-slate-800 tabular-nums">
                           {b.importPrice.toLocaleString("vi-VN")}đ
                         </td>
-                        <td className="px-5 py-4 font-mono">
+                        <td className="px-5 py-4 font-mono tabular-nums">
                           <span className="font-extrabold text-slate-900">
                             {b.remainingQuantity}
                           </span>{" "}
                           / {b.initialQuantity} hộp
                         </td>
                         <td className="px-5 py-4">
-                          <div className="font-mono font-bold text-slate-900">
+                          <div className="font-mono font-bold text-slate-900 tabular-nums">
                             {b.expiryDate}
                           </div>
-                          <div className="text-[11px] font-medium text-slate-500">
+                          <div className="text-[11px] font-medium text-slate-500 tabular-nums">
                             {b.daysUntilExpiry > 0
                               ? `Còn ${b.daysUntilExpiry} ngày`
                               : `Quá hạn ${Math.abs(b.daysUntilExpiry)} ngày`}
@@ -421,12 +463,14 @@ export default function AdminDashboardPage() {
                           <span
                             className={`inline-block rounded-lg border px-2.5 py-1 text-[11px] font-bold ${statusBadge}`}
                           >
-                            {b.batchStatus === "AVAILABLE" && "Còn hạn xa"}
-                            {b.batchStatus === "NEAR_EXPIRY" &&
-                              "Sắp hết hạn (<60 ngày)"}
-                            {b.batchStatus === "EXPIRED" &&
-                              "Đã hết hạn (Khóa xuất)"}
-                            {b.batchStatus === "DEPLETED" && "Đã xuất hết"}
+                            {b.batchStatus === "AVAILABLE" ? "Còn hạn xa" : null}
+                            {b.batchStatus === "NEAR_EXPIRY"
+                              ? "Sắp hết hạn (<60 ngày)"
+                              : null}
+                            {b.batchStatus === "EXPIRED"
+                              ? "Đã hết hạn (Khóa xuất)"
+                              : null}
+                            {b.batchStatus === "DEPLETED" ? "Đã xuất hết" : null}
                           </span>
                         </td>
                       </tr>
@@ -436,11 +480,11 @@ export default function AdminDashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        </SolidCard>
+      ) : null}
 
       {/* TAB 2: IMPORT NEW BATCH FORM */}
-      {activeTab === "IMPORT_BATCH" && (
+      {activeTab === "IMPORT_BATCH" ? (
         <form
           onSubmit={handleImportBatch}
           className="max-w-3xl solid-card p-6 sm:p-8 space-y-5"
@@ -459,10 +503,15 @@ export default function AdminDashboardPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div className="sm:col-span-2">
-              <label className="block font-bold text-slate-700 mb-1.5">
+              <label
+                htmlFor="admin-variant"
+                className="block font-bold text-slate-700 mb-1.5"
+              >
                 Chọn Sản Phẩm & Hương Vị *
               </label>
               <select
+                id="admin-variant"
+                name="variantId"
                 value={variantId}
                 onChange={(e) => setVariantId(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900"
@@ -479,11 +528,18 @@ export default function AdminDashboardPage() {
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">
+              <label
+                htmlFor="admin-batch-code"
+                className="block font-bold text-slate-700 mb-1.5"
+              >
                 Mã Số Lô Hàng *
               </label>
               <input
+                id="admin-batch-code"
+                name="batchCode"
                 type="text"
+                autoComplete="off"
+                spellCheck={false}
                 required
                 value={batchCode}
                 onChange={(e) => setBatchCode(e.target.value.toUpperCase())}
@@ -492,11 +548,17 @@ export default function AdminDashboardPage() {
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">
+              <label
+                htmlFor="admin-supplier"
+                className="block font-bold text-slate-700 mb-1.5"
+              >
                 Nhà Phân Phối / Nguồn Nhập
               </label>
               <input
+                id="admin-supplier"
+                name="supplierName"
                 type="text"
+                autoComplete="off"
                 value={supplierName}
                 onChange={(e) => setSupplierName(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-medium text-slate-900"
@@ -504,40 +566,57 @@ export default function AdminDashboardPage() {
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">
+              <label
+                htmlFor="admin-import-price"
+                className="block font-bold text-slate-700 mb-1.5"
+              >
                 Giá Vốn Nhập Kho / Hộp (VNĐ) *
               </label>
               <input
+                id="admin-import-price"
+                name="importPrice"
                 type="number"
+                inputMode="numeric"
                 required
                 min={50000}
                 step={10000}
                 value={importPrice}
                 onChange={(e) => setImportPrice(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-mono font-bold text-emerald-700"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-mono font-bold text-emerald-700 tabular-nums"
               />
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">
+              <label
+                htmlFor="admin-initial-qty"
+                className="block font-bold text-slate-700 mb-1.5"
+              >
                 Số Lượng Nhập (Hộp) *
               </label>
               <input
+                id="admin-initial-qty"
+                name="initialQuantity"
                 type="number"
+                inputMode="numeric"
                 required
                 min={1}
                 max={1000}
                 value={initialQuantity}
                 onChange={(e) => setInitialQuantity(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-mono font-bold text-slate-900"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-mono font-bold text-slate-900 tabular-nums"
               />
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">
+              <label
+                htmlFor="admin-mfg-date"
+                className="block font-bold text-slate-700 mb-1.5"
+              >
                 Ngày Sản Xuất
               </label>
               <input
+                id="admin-mfg-date"
+                name="manufacturedDate"
                 type="date"
                 value={manufacturedDate}
                 onChange={(e) => setManufacturedDate(e.target.value)}
@@ -546,10 +625,15 @@ export default function AdminDashboardPage() {
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1.5">
+              <label
+                htmlFor="admin-exp-date"
+                className="block font-bold text-slate-700 mb-1.5"
+              >
                 Ngày Hết Hạn Sử Dụng *
               </label>
               <input
+                id="admin-exp-date"
+                name="expiryDate"
                 type="date"
                 required
                 value={expiryDate}
@@ -562,25 +646,28 @@ export default function AdminDashboardPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-xl bg-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-500 transition"
+            className="w-full rounded-xl bg-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-500 transition-colors"
           >
             {submitting
-              ? "Đang lưu phiếu nhập kho..."
+              ? "Đang lưu phiếu nhập kho…"
               : "Xác Nhận Nhập Lô Hàng Mới"}
           </button>
         </form>
-      )}
+      ) : null}
 
       {/* TAB 3: ORDERS & FEFO BATCH TRACEABILITY */}
-      {activeTab === "ORDERS_WEBHOOK" && (
+      {activeTab === "ORDERS_WEBHOOK" ? (
         <div className="space-y-4">
           {orders.map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (ord: any) => (
-              <div key={ord.id} className="solid-card p-6 space-y-4 text-xs">
+              <SolidCard key={ord.id} className="p-6 space-y-4 text-xs">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
                   <div>
-                    <span className="font-mono text-base font-extrabold text-slate-900">
+                    <span
+                      className="font-mono text-base font-extrabold text-slate-900"
+                      translate="no"
+                    >
                       Đơn hàng: {ord.orderCode}
                     </span>
                     <span className="ml-3 font-medium text-slate-600">
@@ -593,7 +680,10 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-lg bg-slate-100 px-3 py-1 font-bold text-slate-700">
+                    <span
+                      className="rounded-lg bg-slate-100 px-3 py-1 font-bold text-slate-700"
+                      translate="no"
+                    >
                       {ord.paymentMethod}
                     </span>
                     <span
@@ -611,7 +701,7 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => handleWebhookIpn(ord.id, ord.orderCode)}
-                      className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                      className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"
                     >
                       Xác nhận Webhook ({ord.paymentMethod})
                     </button>
@@ -632,14 +722,17 @@ export default function AdminDashboardPage() {
                           </div>
                           {item.allocatedBatchCode ? (
                             <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                              <span className="rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-mono font-bold text-emerald-700">
+                              <span
+                                className="rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-mono font-bold text-emerald-700"
+                                translate="no"
+                              >
                                 Xuất từ lô: {item.allocatedBatchCode}
                               </span>
-                              <span className="font-mono font-medium text-slate-600">
+                              <span className="font-mono font-medium text-slate-600 tabular-nums">
                                 HSD: {item.allocatedBatchExpiry}
                               </span>
-                              {item.allocatedBatchImportPrice && (
-                                <span className="font-mono text-indigo-700 font-semibold">
+                              {item.allocatedBatchImportPrice ? (
+                                <span className="font-mono text-indigo-700 font-semibold tabular-nums">
                                   Giá vốn:{" "}
                                   {item.allocatedBatchImportPrice.toLocaleString(
                                     "vi-VN"
@@ -652,7 +745,7 @@ export default function AdminDashboardPage() {
                                   ).toLocaleString("vi-VN")}
                                   đ
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                           ) : (
                             <span className="inline-block rounded bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-[11px] font-bold text-indigo-700">
@@ -660,18 +753,18 @@ export default function AdminDashboardPage() {
                             </span>
                           )}
                         </div>
-                        <div className="font-mono text-sm font-extrabold text-slate-900">
+                        <div className="font-mono text-sm font-extrabold text-slate-900 tabular-nums">
                           {item.lineTotal.toLocaleString("vi-VN")}đ
                         </div>
                       </div>
                     )
                   )}
                 </div>
-              </div>
+              </SolidCard>
             )
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

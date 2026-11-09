@@ -5,12 +5,18 @@ import { CheckCircle2, AlertTriangle, XCircle, Info, X } from "lucide-react";
 import { useHybridCartStore } from "@/store/useHybridCartStore";
 
 export function ToastViewport() {
-  const { toasts, dismissToast } = useHybridCartStore();
+  const toasts = useHybridCartStore((s) => s.toasts);
+  const dismissToast = useHybridCartStore((s) => s.dismissToast);
 
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
+    <div
+      role="region"
+      aria-live="polite"
+      aria-label="Thông báo hệ thống"
+      className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"
+    >
       {toasts.map((t) => {
         const Icon =
           t.type === "success"
@@ -33,21 +39,28 @@ export function ToastViewport() {
         return (
           <div
             key={t.id}
+            role="status"
             className="pointer-events-auto flex items-start gap-3 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/80 p-4 shadow-[0_8px_32px_rgba(15,23,42,0.1)]"
           >
-            <Icon className={`h-5 w-5 shrink-0 mt-0.5 ${iconColor}`} />
-            <div className="flex-1 text-xs">
+            <Icon
+              className={`h-5 w-5 shrink-0 mt-0.5 ${iconColor}`}
+              aria-hidden="true"
+            />
+            <div className="flex-1 min-w-0 text-xs">
               <div className="font-bold text-slate-900">{t.title}</div>
-              {t.description && (
-                <div className="mt-0.5 font-medium text-slate-700">{t.description}</div>
-              )}
+              {t.description ? (
+                <div className="mt-0.5 font-medium text-slate-700 break-words">
+                  {t.description}
+                </div>
+              ) : null}
             </div>
             <button
               type="button"
+              aria-label="Đóng thông báo"
               onClick={() => dismissToast(t.id)}
-              className="text-slate-400 hover:text-slate-800"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         );

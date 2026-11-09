@@ -1,6 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+  useDeferredValue,
+  startTransition,
+} from "react";
 import Link from "next/link";
 import {
   Package,
@@ -10,6 +15,7 @@ import {
   Search,
 } from "lucide-react";
 import { useHybridCartStore } from "@/store/useHybridCartStore";
+import { GlassPanel, SolidCard, StatusBadge } from "@/components/ui/Surface";
 
 interface SupplementProductItem {
   id: string;
@@ -48,10 +54,18 @@ interface SupplementProductItem {
   }[];
 }
 
+const GOAL_BADGE_MAP: Record<string, string> = {
+  MUSCLE_GAIN: "Tăng cơ",
+  FAT_LOSS: "Giảm mỡ",
+  ENDURANCE: "Tăng sức bền",
+  RECOVERY: "Phục hồi cơ",
+};
+
 export default function SupplementsPage() {
-  const { addItem } = useHybridCartStore();
+  const addItem = useHybridCartStore((s) => s.addItem);
   const [products, setProducts] = useState<SupplementProductItem[]>([]);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedGoal, setSelectedGoal] = useState("ALL");
   const [lactoseFreeOnly, setLactoseFreeOnly] = useState(false);
@@ -67,65 +81,87 @@ export default function SupplementsPage() {
   }, []);
 
   const filtered = products.filter((p) => {
+    const q = deferredSearch.trim().toLowerCase();
     if (
-      search.trim() !== "" &&
-      !p.name.toLowerCase().includes(search.toLowerCase()) &&
-      !p.brand.toLowerCase().includes(search.toLowerCase())
+      q !== "" &&
+      !p.name.toLowerCase().includes(q) &&
+      !p.brand.toLowerCase().includes(q)
     ) {
       return false;
     }
-    if (selectedCategory !== "ALL" && p.categoryId !== selectedCategory) return false;
+    if (selectedCategory !== "ALL" && p.categoryId !== selectedCategory)
+      return false;
     if (selectedGoal !== "ALL" && p.targetGoal !== selectedGoal) return false;
     if (lactoseFreeOnly && p.allergenTags.includes("LACTOSE")) return false;
-    if (caffeineFreeOnly && p.allergenTags.includes("HIGH_CAFFEINE")) return false;
+    if (caffeineFreeOnly && p.allergenTags.includes("HIGH_CAFFEINE"))
+      return false;
     return true;
   });
 
-  const goalBadgeMap: Record<string, string> = {
-    MUSCLE_GAIN: "Tăng cơ",
-    FAT_LOSS: "Giảm mỡ",
-    ENDURANCE: "Tăng sức bền",
-    RECOVERY: "Phục hồi cơ",
+  const handleResetFilters = () => {
+    startTransition(() => {
+      setSearch("");
+      setSelectedCategory("ALL");
+      setSelectedGoal("ALL");
+      setLactoseFreeOnly(false);
+      setCaffeineFreeOnly(false);
+    });
   };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 space-y-8">
       {/* Top Focal Glass Filter Bar */}
-      <div className="glass-panel p-6 sm:p-8 space-y-5">
+      <GlassPanel className="p-6 sm:p-8 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">
-              <Package className="h-3.5 w-3.5" />
+              <Package className="h-3.5 w-3.5" aria-hidden="true" />
               Thực Phẩm Bổ Sung Chính Hãng • Xuất Kho Theo Hạn Dùng Mới Nhất
             </div>
-            <h1 className="mt-2.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="mt-2.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 text-balance">
               Cửa Hàng Thực Phẩm Bổ Sung
             </h1>
-            <p className="mt-1 text-sm font-medium text-slate-700">
+            <p className="mt-1 text-sm font-medium text-slate-700 text-pretty">
               Lọc nhanh sản phẩm theo mục tiêu tập luyện và thành phần an toàn cho cơ địa của bạn.
             </p>
           </div>
-          <span className="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700">
+          <span
+            aria-live="polite"
+            className="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 tabular-nums"
+          >
             Hiển thị {filtered.length} sản phẩm
           </span>
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <div className="relative">
-            <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+            <Search
+              className="absolute left-3.5 top-3 h-4 w-4 text-slate-400"
+              aria-hidden="true"
+            />
             <input
-              type="text"
+              id="supp-search"
+              name="search"
+              type="search"
+              aria-label="Tìm tên thực phẩm bổ sung hoặc thương hiệu"
+              autoComplete="off"
+              spellCheck={false}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm tên Whey, Creatine, Pre-Workout..."
-              className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 py-2.5 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:outline-none"
+              placeholder="Tìm tên Whey, Creatine, Pre-Workout…"
+              className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 py-2.5 text-xs font-medium text-slate-900"
             />
           </div>
 
           <select
+            id="supp-category"
+            name="category"
+            aria-label="Lọc theo danh mục sản phẩm"
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:border-emerald-600 focus:outline-none"
+            onChange={(e) =>
+              startTransition(() => setSelectedCategory(e.target.value))
+            }
+            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800"
           >
             <option value="ALL">Tất cả danh mục</option>
             <option value="cat-whey">Whey Protein Tăng Cơ</option>
@@ -135,9 +171,14 @@ export default function SupplementsPage() {
           </select>
 
           <select
+            id="supp-goal"
+            name="goal"
+            aria-label="Lọc theo mục tiêu tập luyện"
             value={selectedGoal}
-            onChange={(e) => setSelectedGoal(e.target.value)}
-            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:border-emerald-600 focus:outline-none"
+            onChange={(e) =>
+              startTransition(() => setSelectedGoal(e.target.value))
+            }
+            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800"
           >
             <option value="ALL">Tất cả mục tiêu</option>
             <option value="MUSCLE_GAIN">Tăng cơ nạc</option>
@@ -146,11 +187,18 @@ export default function SupplementsPage() {
             <option value="RECOVERY">Phục hồi cơ</option>
           </select>
 
-          <div className="flex items-center gap-2">
+          <div
+            role="group"
+            aria-label="Lọc thành phần dị ứng"
+            className="flex items-center gap-2"
+          >
             <button
               type="button"
-              onClick={() => setLactoseFreeOnly(!lactoseFreeOnly)}
-              className={`flex-1 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
+              aria-pressed={lactoseFreeOnly}
+              onClick={() =>
+                startTransition(() => setLactoseFreeOnly((v) => !v))
+              }
+              className={`flex-1 rounded-xl border px-3 py-2.5 text-xs font-bold transition-colors ${
                 lactoseFreeOnly
                   ? "border-emerald-600 bg-emerald-600 text-white"
                   : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
@@ -160,8 +208,11 @@ export default function SupplementsPage() {
             </button>
             <button
               type="button"
-              onClick={() => setCaffeineFreeOnly(!caffeineFreeOnly)}
-              className={`flex-1 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
+              aria-pressed={caffeineFreeOnly}
+              onClick={() =>
+                startTransition(() => setCaffeineFreeOnly((v) => !v))
+              }
+              className={`flex-1 rounded-xl border px-3 py-2.5 text-xs font-bold transition-colors ${
                 caffeineFreeOnly
                   ? "border-emerald-600 bg-emerald-600 text-white"
                   : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
@@ -171,114 +222,149 @@ export default function SupplementsPage() {
             </button>
           </div>
         </div>
-      </div>
+      </GlassPanel>
 
-      {/* Product Grid: 3 Columns, Solid White Cards, Max 4 Clean Items per Card */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((prod) => {
-          const primaryVar = prod.variants[0];
-          if (!primaryVar) return null;
-          const unitPrice = primaryVar.salePrice ?? primaryVar.price;
+      {/* Empty State Handling */}
+      {filtered.length === 0 ? (
+        <SolidCard className="p-10 text-center space-y-3">
+          <Package
+            className="mx-auto h-10 w-10 text-slate-400"
+            aria-hidden="true"
+          />
+          <h2 className="text-base font-bold text-slate-900">
+            Không tìm thấy sản phẩm phù hợp với bộ lọc
+          </h2>
+          <p className="text-xs font-medium text-slate-600">
+            Hãy thử từ khóa khác hoặc đặt lại bộ lọc để xem toàn bộ danh mục thực phẩm bổ sung.
+          </p>
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors"
+          >
+            Đặt lại bộ lọc
+          </button>
+        </SolidCard>
+      ) : (
+        /* Product Grid: 3 Columns, Solid White Cards, Max 4 Clean Items per Card */
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((prod) => {
+            const primaryVar = prod.variants[0];
+            if (!primaryVar) return null;
+            const unitPrice = primaryVar.salePrice ?? primaryVar.price;
 
-          return (
-            <div
-              key={prod.id}
-              className="solid-card p-6 flex flex-col justify-between hover:border-emerald-300 transition"
-            >
-              <div className="space-y-4">
-                {/* 1. Image */}
-                <Link
-                  href={`/supplements/${prod.slug}`}
-                  className="block overflow-hidden rounded-xl border border-slate-100 bg-slate-50 h-52"
-                >
-                  <img
-                    src={primaryVar.imageUrl}
-                    alt={prod.name}
-                    className="h-full w-full object-cover hover:scale-105 transition duration-300"
-                  />
-                </Link>
-
-                {/* 2. Up to 2 Badges (Goal + Allergen status) */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                    {goalBadgeMap[prod.targetGoal] || prod.targetGoal} •{" "}
-                    {prod.nutritionFacts.proteinGrams}g Protein
-                  </span>
-                  {prod.allergenTags.length === 0 ? (
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                      Không gây dị ứng
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                      Có {prod.allergenTags.join(", ")}
-                    </span>
-                  )}
-                </div>
-
-                {/* 3. Brand + Name */}
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    {prod.brand} • {prod.originCountry}
-                  </div>
+            return (
+              <SolidCard
+                key={prod.id}
+                className="p-6 flex flex-col justify-between hover:border-emerald-300"
+              >
+                <div className="space-y-4">
+                  {/* 1. Image */}
                   <Link
                     href={`/supplements/${prod.slug}`}
-                    className="mt-1 block text-lg font-bold text-slate-900 hover:text-emerald-600 line-clamp-2"
+                    className="block overflow-hidden rounded-xl border border-slate-100 bg-slate-50 h-52"
                   >
-                    {prod.name}
+                    <img
+                      src={primaryVar.imageUrl}
+                      alt={prod.name}
+                      width={480}
+                      height={320}
+                      loading="lazy"
+                      className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
                   </Link>
-                  <p className="mt-1 text-xs font-medium text-slate-600">
-                    {primaryVar.flavor} • {primaryVar.weightLabel}
-                  </p>
-                </div>
-              </div>
 
-              {/* 4. Price + Add to Cart Button */}
-              <div className="pt-5 mt-5 border-t border-slate-100 flex items-center justify-between gap-3">
-                <div>
-                  <div className="font-mono text-xl font-extrabold text-slate-900">
-                    {unitPrice.toLocaleString("vi-VN")}đ
+                  {/* 2. Up to 2 Badges */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge tone="emerald">
+                      {GOAL_BADGE_MAP[prod.targetGoal] || prod.targetGoal} •{" "}
+                      {prod.nutritionFacts.proteinGrams}g Protein
+                    </StatusBadge>
+                    {prod.allergenTags.length === 0 ? (
+                      <StatusBadge tone="slate">
+                        <ShieldCheck
+                          className="h-3.5 w-3.5 text-emerald-600"
+                          aria-hidden="true"
+                        />
+                        Không gây dị ứng
+                      </StatusBadge>
+                    ) : (
+                      <StatusBadge tone="amber">
+                        <AlertTriangle
+                          className="h-3.5 w-3.5 text-amber-600"
+                          aria-hidden="true"
+                        />
+                        Có {prod.allergenTags.join(", ")}
+                      </StatusBadge>
+                    )}
                   </div>
-                  {primaryVar.salePrice && (
-                    <div className="font-mono text-xs text-slate-400 line-through">
-                      {primaryVar.price.toLocaleString("vi-VN")}đ
+
+                  {/* 3. Brand + Name */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      {prod.brand} • {prod.originCountry}
                     </div>
-                  )}
+                    <Link
+                      href={`/supplements/${prod.slug}`}
+                      className="mt-1 block text-lg font-bold text-slate-900 hover:text-emerald-600 line-clamp-2 transition-colors"
+                    >
+                      {prod.name}
+                    </Link>
+                    <p className="mt-1 text-xs font-medium text-slate-600">
+                      {primaryVar.flavor} • {primaryVar.weightLabel}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/supplements/${prod.slug}`}
-                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
-                  >
-                    Chi tiết
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      addItem({
-                        id: primaryVar.id,
-                        itemType: "SUPPLEMENT_VARIANT",
-                        supplementVariantId: primaryVar.id,
-                        name: prod.name,
-                        subtitle: `${primaryVar.flavor} • ${primaryVar.weightLabel}`,
-                        unitPrice,
-                        imageUrl: primaryVar.imageUrl,
-                        skuOrBadge: primaryVar.sku,
-                      })
-                    }
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm"
-                  >
-                    <ShoppingBag className="h-3.5 w-3.5" />
-                    Thêm giỏ
-                  </button>
+                {/* 4. Price + Add to Cart Button */}
+                <div className="pt-5 mt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-mono text-xl font-extrabold text-slate-900 tabular-nums">
+                      {unitPrice.toLocaleString("vi-VN")}đ
+                    </div>
+                    {primaryVar.salePrice ? (
+                      <div className="font-mono text-xs text-slate-400 line-through tabular-nums">
+                        {primaryVar.price.toLocaleString("vi-VN")}đ
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/supplements/${prod.slug}`}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                      Chi tiết
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        addItem({
+                          id: primaryVar.id,
+                          itemType: "SUPPLEMENT_VARIANT",
+                          supplementVariantId: primaryVar.id,
+                          name: prod.name,
+                          subtitle: `${primaryVar.flavor} • ${primaryVar.weightLabel}`,
+                          unitPrice,
+                          imageUrl: primaryVar.imageUrl,
+                          skuOrBadge: primaryVar.sku,
+                        })
+                      }
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-500 transition-colors shadow-sm"
+                    >
+                      <ShoppingBag
+                        className="h-3.5 w-3.5"
+                        aria-hidden="true"
+                      />
+                      Thêm giỏ
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              </SolidCard>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

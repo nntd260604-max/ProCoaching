@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useHybridCartStore } from "@/store/useHybridCartStore";
+import { GlassPanel, SolidCard, StatusBadge } from "@/components/ui/Surface";
 
 interface SupplementItem {
   id: string;
@@ -43,8 +44,22 @@ interface CourseItem {
   trainerName: string;
 }
 
+const GOAL_LABEL: Record<string, string> = {
+  MUSCLE_GAIN: "Tăng cơ",
+  FAT_LOSS: "Giảm mỡ",
+  ENDURANCE: "Tăng sức bền",
+  RECOVERY: "Phục hồi",
+};
+
+const COURSE_TYPE_LABEL: Record<string, string> = {
+  HYBRID_COMBO: "Combo Thẻ Tập + PT + Video",
+  ONLINE_VIDEO: "Khóa học Video",
+  PT_PACKAGE: "Gói PT 1-1",
+  GYM_MEMBERSHIP: "Thẻ phòng tập",
+};
+
 export default function HomePage() {
-  const { addItem } = useHybridCartStore();
+  const addItem = useHybridCartStore((s) => s.addItem);
   const [supplements, setSupplements] = useState<SupplementItem[]>([]);
   const [courses, setCourses] = useState<CourseItem[]>([]);
 
@@ -58,53 +73,47 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  const goalLabel: Record<string, string> = {
-    MUSCLE_GAIN: "Tăng cơ",
-    FAT_LOSS: "Giảm mỡ",
-    ENDURANCE: "Tăng sức bền",
-    RECOVERY: "Phục hồi",
-  };
-
-  const courseTypeLabel: Record<string, string> = {
-    HYBRID_COMBO: "Combo Thẻ Tập + PT + Video",
-    ONLINE_VIDEO: "Khóa học Video",
-    PT_PACKAGE: "Gói PT 1-1",
-    GYM_MEMBERSHIP: "Thẻ phòng tập",
-  };
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 space-y-16">
       {/* Tầng 2: Khối Tiêu Điểm Hero (Selective Glass Panel) */}
-      <section className="glass-panel p-8 sm:p-12">
+      <GlassPanel as="section" className="p-8 sm:p-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 items-center">
           <div className="lg:col-span-7 space-y-5">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <ShieldCheck
+                className="h-3.5 w-3.5 text-emerald-600"
+                aria-hidden="true"
+              />
               Hệ sinh thái Thể hình & Dinh dưỡng Toàn diện
             </span>
 
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl leading-[1.15]">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl leading-[1.15] text-balance">
               Tập luyện chuẩn khoa học & dinh dưỡng cá nhân hóa cùng{" "}
-              <span className="text-emerald-600">GymHub</span>
+              <span className="text-emerald-600" translate="no">
+                GymHub
+              </span>
             </h1>
 
-            <p className="text-base font-medium text-slate-700 leading-relaxed max-w-2xl">
+            <p className="text-base font-medium text-slate-700 leading-relaxed max-w-2xl text-pretty">
               Tính chỉ số BMI/TDEE kết hợp AI gợi ý thực đơn lọc dị ứng, đặt lịch tập 1-1 cùng Huấn luyện viên cá nhân, học video trực tuyến và mua sắm thực phẩm bổ sung chính hãng.
             </p>
 
             <div className="flex flex-wrap gap-3.5 pt-2">
               <Link
                 href="/tdee-calculator"
-                className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition"
+                className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
               >
-                <Calculator className="h-4 w-4" />
+                <Calculator className="h-4 w-4" aria-hidden="true" />
                 Đo BMI/TDEE & Nhận Thực Đơn AI
               </Link>
               <Link
                 href="/supplements"
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 hover:bg-slate-50 transition"
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 hover:bg-slate-50 transition-colors"
               >
-                <Package className="h-4 w-4 text-indigo-600" />
+                <Package
+                  className="h-4 w-4 text-indigo-600"
+                  aria-hidden="true"
+                />
                 Cửa hàng Thực phẩm bổ sung
               </Link>
             </div>
@@ -114,13 +123,13 @@ export default function HomePage() {
           <div className="lg:col-span-5 space-y-3.5">
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs flex items-start gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <Dumbbell className="h-5 w-5" />
+                <Dumbbell className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">
-                  Thẻ Tập Mã QR Động 60s & Video Chống Tua
-                </h3>
-                <p className="text-xs font-medium text-slate-700 mt-1">
+                <h2 className="text-sm font-bold text-slate-900">
+                  Thẻ Tập Mã QR Động 60s & Khóa Học Video
+                </h2>
+                <p className="text-xs font-medium text-slate-700 mt-1 text-pretty">
                   Check-in phòng tập bảo mật mỗi 60 giây và tự động lưu tiến độ bài giảng video.
                 </p>
               </div>
@@ -128,13 +137,13 @@ export default function HomePage() {
 
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs flex items-start gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                <UserCheck className="h-5 w-5" />
+                <UserCheck className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">
+                <h2 className="text-sm font-bold text-slate-900">
                   Đặt Lịch Tập 1-1 Cùng Huấn Luyện Viên
-                </h3>
-                <p className="text-xs font-medium text-slate-700 mt-1">
+                </h2>
+                <p className="text-xs font-medium text-slate-700 mt-1 text-pretty">
                   Chọn khung giờ rảnh của PT theo thời gian thực và theo dõi nhận xét sau mỗi buổi.
                 </p>
               </div>
@@ -142,26 +151,26 @@ export default function HomePage() {
 
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs flex items-start gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                <Package className="h-5 w-5" />
+                <Package className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">
-                  Thực Phẩm Bổ Sung Quản Lý Lô FEFO
-                </h3>
-                <p className="text-xs font-medium text-slate-700 mt-1">
+                <h2 className="text-sm font-bold text-slate-900">
+                  Thực Phẩm Bổ Sung Xuất Kho Hạn Mới Nhất
+                </h2>
+                <p className="text-xs font-medium text-slate-700 mt-1 text-pretty">
                   Cam kết hạn sử dụng minh bạch và tự động sàng lọc thành phần dị ứng Lactose, Caffeine.
                 </p>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </GlassPanel>
 
-      {/* Tầng 1: Danh sách Thực phẩm bổ sung nổi bật (Solid Cards, 3 cột, gap-6, p-6, đúng 4 thông tin) */}
+      {/* Tầng 1: Danh sách Thực phẩm bổ sung nổi bật */}
       <section className="space-y-6">
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 text-balance">
               Thực phẩm bổ sung nổi bật
             </h2>
             <p className="text-sm font-medium text-slate-700 mt-1">
@@ -170,9 +179,9 @@ export default function HomePage() {
           </div>
           <Link
             href="/supplements"
-            className="inline-flex items-center gap-1 text-sm font-bold text-emerald-600 hover:text-emerald-700"
+            className="inline-flex items-center gap-1 text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
           >
-            Xem tất cả <ArrowRight className="h-4 w-4" />
+            Xem tất cả <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
@@ -183,9 +192,9 @@ export default function HomePage() {
             const unitPrice = v.salePrice ?? v.price;
 
             return (
-              <div
+              <SolidCard
                 key={prod.id}
-                className="solid-card p-6 flex flex-col justify-between space-y-5"
+                className="p-6 flex flex-col justify-between space-y-5"
               >
                 <div className="space-y-4">
                   {/* 1. Hình ảnh */}
@@ -196,23 +205,26 @@ export default function HomePage() {
                     <img
                       src={v.imageUrl}
                       alt={prod.name}
-                      className="h-full w-full object-cover hover:scale-105 transition duration-300"
+                      width={480}
+                      height={320}
+                      loading="lazy"
+                      className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
                     />
                   </Link>
 
-                  {/* 2. Tối đa 2 Badge nhỏ (Mục tiêu & Không chứa Lactose/Caffeine) */}
+                  {/* 2. Tối đa 2 Badge nhỏ */}
                   <div className="flex flex-wrap gap-2">
-                    <span className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
-                      {goalLabel[prod.targetGoal] || prod.targetGoal}
-                    </span>
+                    <StatusBadge tone="indigo">
+                      {GOAL_LABEL[prod.targetGoal] || prod.targetGoal}
+                    </StatusBadge>
                     {prod.allergenTags.length === 0 ? (
-                      <span className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                      <StatusBadge tone="emerald">
                         Không Lactose / Caffeine
-                      </span>
+                      </StatusBadge>
                     ) : (
-                      <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+                      <StatusBadge tone="amber">
                         Chứa: {prod.allergenTags.join(", ")}
-                      </span>
+                      </StatusBadge>
                     )}
                   </div>
 
@@ -223,7 +235,7 @@ export default function HomePage() {
                     </div>
                     <Link
                       href={`/supplements/${prod.slug}`}
-                      className="mt-1 block text-base font-bold text-slate-900 hover:text-emerald-600 line-clamp-2"
+                      className="mt-1 block text-base font-bold text-slate-900 hover:text-emerald-600 line-clamp-2 transition-colors"
                     >
                       {prod.name}
                     </Link>
@@ -232,7 +244,7 @@ export default function HomePage() {
 
                 {/* 4. Giá tiền + Nút thêm vào giỏ */}
                 <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                  <span className="font-mono text-lg font-extrabold text-emerald-700">
+                  <span className="font-mono text-lg font-extrabold text-emerald-700 tabular-nums">
                     {unitPrice.toLocaleString("vi-VN")}đ
                   </span>
                   <button
@@ -249,22 +261,22 @@ export default function HomePage() {
                         skuOrBadge: v.sku,
                       })
                     }
-                    className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-600 transition"
+                    className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-600 transition-colors"
                   >
                     + Thêm vào giỏ
                   </button>
                 </div>
-              </div>
+              </SolidCard>
             );
           })}
         </div>
       </section>
 
-      {/* Tầng 1: Gói tập & Khóa học Online (Solid Cards, 3 cột, gap-6, p-6) */}
+      {/* Tầng 1: Gói tập & Khóa học Online */}
       <section className="space-y-6">
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 text-balance">
               Gói tập Phòng Gym, PT 1-1 & Khóa học Video
             </h2>
             <p className="text-sm font-medium text-slate-700 mt-1">
@@ -273,17 +285,17 @@ export default function HomePage() {
           </div>
           <Link
             href="/courses"
-            className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-700"
+            className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
           >
-            Xem tất cả <ArrowRight className="h-4 w-4" />
+            Xem tất cả <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {courses.map((course) => (
-            <div
+            <SolidCard
               key={course.id}
-              className="solid-card p-6 flex flex-col justify-between space-y-5"
+              className="p-6 flex flex-col justify-between space-y-5"
             >
               <div className="space-y-4">
                 <Link
@@ -293,20 +305,23 @@ export default function HomePage() {
                   <img
                     src={course.thumbnailUrl}
                     alt={course.title}
-                    className="h-full w-full object-cover hover:scale-105 transition duration-300"
+                    width={480}
+                    height={300}
+                    loading="lazy"
+                    className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </Link>
 
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
-                    {courseTypeLabel[course.courseType] || course.courseType}
-                  </span>
-                  <span className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                  <StatusBadge tone="indigo">
+                    {COURSE_TYPE_LABEL[course.courseType] || course.courseType}
+                  </StatusBadge>
+                  <StatusBadge tone="emerald">
                     {course.durationDays} ngày
                     {course.ptSessionsIncluded > 0
                       ? ` • ${course.ptSessionsIncluded} buổi PT`
                       : ""}
-                  </span>
+                  </StatusBadge>
                 </div>
 
                 <div>
@@ -315,7 +330,7 @@ export default function HomePage() {
                   </div>
                   <Link
                     href={`/courses/${course.slug}`}
-                    className="mt-1 block text-base font-bold text-slate-900 hover:text-indigo-600 line-clamp-2"
+                    className="mt-1 block text-base font-bold text-slate-900 hover:text-indigo-600 line-clamp-2 transition-colors"
                   >
                     {course.title}
                   </Link>
@@ -323,7 +338,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                <span className="font-mono text-lg font-extrabold text-indigo-700">
+                <span className="font-mono text-lg font-extrabold text-indigo-700 tabular-nums">
                   {course.price.toLocaleString("vi-VN")}đ
                 </span>
                 <button
@@ -340,12 +355,12 @@ export default function HomePage() {
                       skuOrBadge: course.courseType,
                     })
                   }
-                  className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                  className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors"
                 >
                   Đăng ký gói
                 </button>
               </div>
-            </div>
+            </SolidCard>
           ))}
         </div>
       </section>

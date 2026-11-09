@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  memo,
+  startTransition,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,8 +23,15 @@ import {
   Lock,
 } from "lucide-react";
 import { useHybridCartStore } from "@/store/useHybridCartStore";
+import { DarkPassCard, SolidCard } from "@/components/ui/Surface";
 
-function DynamicQrSvg({ token }: { token: string }) {
+// Memoized QR Matrix (`rerender-memo` from vercel-react-best-practices)
+// Prevents recalculating 441 SVG cells every 1s countdown tick
+const DynamicQrSvg = memo(function DynamicQrSvg({
+  token,
+}: {
+  token: string;
+}) {
   const size = 21;
   const cells: boolean[][] = Array.from({ length: size }, () =>
     Array(size).fill(false)
@@ -66,6 +79,8 @@ function DynamicQrSvg({ token }: { token: string }) {
         viewBox={`0 0 ${size} ${size}`}
         className="h-48 w-48"
         shapeRendering="crispEdges"
+        role="img"
+        aria-label="Mã QR điểm danh hội viên tự động đổi mỗi 60 giây"
       >
         {cells.map((row, rIdx) =>
           row.map((filled, cIdx) =>
@@ -84,16 +99,37 @@ function DynamicQrSvg({ token }: { token: string }) {
       </svg>
     </div>
   );
-}
+});
+
+const MEMBER_TABS = [
+  {
+    id: "QR_PASS",
+    label: "Thẻ Tập & Mã QR 60s",
+    icon: QrCode,
+  },
+  {
+    id: "COURSES",
+    label: "Khóa Học Video Của Tôi",
+    icon: PlaySquare,
+  },
+  {
+    id: "PT_BOOKING",
+    label: "Đặt Lịch Tập PT 1-1",
+    icon: Calendar,
+  },
+  {
+    id: "HISTORY",
+    label: "Chỉ Số Cơ Thể & Đơn Hàng",
+    icon: Activity,
+  },
+] as const;
 
 export default function MemberDashboardPage() {
   const router = useRouter();
-  const {
-    activeUserId,
-    setClipboardQrToken,
-    switchDemoRole,
-    pushToast,
-  } = useHybridCartStore();
+  const activeUserId = useHybridCartStore((s) => s.activeUserId);
+  const setClipboardQrToken = useHybridCartStore((s) => s.setClipboardQrToken);
+  const switchDemoRole = useHybridCartStore((s) => s.switchDemoRole);
+  const pushToast = useHybridCartStore((s) => s.pushToast);
 
   const [activeTab, setActiveTab] = useState<
     "QR_PASS" | "COURSES" | "PT_BOOKING" | "HISTORY"
@@ -116,7 +152,7 @@ export default function MemberDashboardPage() {
     endTime: string;
   } | null>(null);
   const [focusArea, setFocusArea] = useState(
-    "Thân trên: Ngực - Vai - Tay sau (Hypertrophy)"
+    "Thân trên: Ngực - Vai - Tay sau (Push Hypertrophy)"
   );
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
 
@@ -145,20 +181,20 @@ export default function MemberDashboardPage() {
     fetchMemberDashboard();
   }, [fetchMemberDashboard]);
 
+  const firstEnrollmentId = memberData?.enrollments?.[0]?.id;
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          const firstEnrollId =
-            memberData?.enrollments?.[0]?.id || "enroll-member-01";
-          refreshQrOnly(firstEnrollId);
+          refreshQrOnly(firstEnrollmentId || "enroll-member-01");
           return 60;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [memberData, refreshQrOnly]);
+  }, [firstEnrollmentId, refreshQrOnly]);
 
   const fetchSlots = useCallback(async () => {
     const res = await fetch(
@@ -243,7 +279,7 @@ export default function MemberDashboardPage() {
   if (!memberData) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-16 text-center text-sm font-medium text-slate-600">
-        Đang tải thông tin Hội viên...
+        Đang tải thông tin Hội viên…
       </div>
     );
   }
@@ -253,11 +289,13 @@ export default function MemberDashboardPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
       {/* Top Member Header Card */}
-      <div className="solid-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <SolidCard className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <img
             src={memberData.member.avatarUrl}
             alt={memberData.member.fullName}
+            width={56}
+            height={56}
             className="h-14 w-14 rounded-2xl object-cover border-2 border-emerald-600"
           />
           <div>
@@ -278,7 +316,7 @@ export default function MemberDashboardPage() {
             <div className="text-xs font-medium text-emerald-800">
               Số buổi PT 1-1 còn lại
             </div>
-            <div className="font-mono text-xl font-extrabold text-emerald-700">
+            <div className="font-mono text-xl font-extrabold text-emerald-700 tabular-nums">
               {primaryEnrollment?.remainingPtSessions ?? 0} /{" "}
               {primaryEnrollment?.totalPtSessions ?? 0} buổi
             </div>
@@ -287,55 +325,42 @@ export default function MemberDashboardPage() {
             <div className="text-xs font-medium text-indigo-800">
               Tiến độ Khóa học Video
             </div>
-            <div className="font-mono text-xl font-extrabold text-indigo-700">
+            <div className="font-mono text-xl font-extrabold text-indigo-700 tabular-nums">
               {primaryEnrollment?.progressPct ?? 0}%
             </div>
           </div>
         </div>
-      </div>
+      </SolidCard>
 
       {/* 4 Clean Tabs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {[
-          {
-            id: "QR_PASS",
-            label: "Thẻ Tập & Mã QR 60s",
-            icon: QrCode,
-          },
-          {
-            id: "COURSES",
-            label: "Khóa Học Video Của Tôi",
-            icon: PlaySquare,
-          },
-          {
-            id: "PT_BOOKING",
-            label: "Đặt Lịch Tập PT 1-1",
-            icon: Calendar,
-          },
-          {
-            id: "HISTORY",
-            label: "Chỉ Số Cơ Thể & Đơn Hàng",
-            icon: Activity,
-          },
-        ].map((t) => {
+      <div
+        role="tablist"
+        aria-label="Các mục quản lý của Hội viên"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-2.5"
+      >
+        {MEMBER_TABS.map((t) => {
           const Icon = t.icon;
           const active = activeTab === t.id;
           return (
             <button
               key={t.id}
               type="button"
+              role="tab"
+              aria-selected={active}
               onClick={() =>
-                setActiveTab(
-                  t.id as "QR_PASS" | "COURSES" | "PT_BOOKING" | "HISTORY"
+                startTransition(() =>
+                  setActiveTab(
+                    t.id as "QR_PASS" | "COURSES" | "PT_BOOKING" | "HISTORY"
+                  )
                 )
               }
-              className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs sm:text-sm font-bold transition ${
+              className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs sm:text-sm font-bold transition-colors ${
                 active
                   ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                   : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
               }`}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>{t.label}</span>
             </button>
           );
@@ -343,10 +368,10 @@ export default function MemberDashboardPage() {
       </div>
 
       {/* AREA 1: VIP DARK GLASS MEMBERSHIP QR PASS + SOLID INFO CARDS */}
-      {activeTab === "QR_PASS" && primaryEnrollment && (
+      {activeTab === "QR_PASS" && primaryEnrollment ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Selective Dark Glass VIP Pass */}
-          <div className="lg:col-span-6 glass-dark-pass p-6 sm:p-8 space-y-6">
+          <DarkPassCard className="lg:col-span-6 p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
@@ -367,17 +392,20 @@ export default function MemberDashboardPage() {
               <div className="w-full max-w-xs space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-1 text-slate-300 font-medium">
-                    <Clock className="h-3.5 w-3.5 text-emerald-400" />
+                    <Clock
+                      className="h-3.5 w-3.5 text-emerald-400"
+                      aria-hidden="true"
+                    />
                     Tự động làm mới sau:
                   </span>
-                  <span className="font-mono text-sm font-extrabold text-emerald-400">
+                  <span className="font-mono text-sm font-extrabold text-emerald-400 tabular-nums">
                     {countdown}s / 60s
                   </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
                   <div
                     style={{ width: `${(countdown / 60) * 100}%` }}
-                    className={`h-full transition-all duration-1000 ${
+                    className={`h-full transition-[width] duration-1000 ${
                       countdown <= 10 ? "bg-rose-500" : "bg-emerald-400"
                     }`}
                   />
@@ -392,46 +420,55 @@ export default function MemberDashboardPage() {
                     onClick={() => refreshQrOnly(primaryEnrollment.id)}
                     className="inline-flex items-center gap-1 text-emerald-400 font-semibold hover:underline"
                   >
-                    <RefreshCw className="h-3 w-3" /> Đổi mã ngay
+                    <RefreshCw className="h-3 w-3" aria-hidden="true" /> Đổi mã
+                    ngay
                   </button>
                 </div>
-                <div className="font-mono text-xs font-bold text-emerald-300 break-all bg-slate-900 p-2.5 rounded-xl border border-white/10">
+                <div
+                  className="font-mono text-xs font-bold text-emerald-300 break-all bg-slate-900 p-2.5 rounded-xl border border-white/10"
+                  translate="no"
+                >
                   {liveQrToken}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => handleCopyToken(liveQrToken)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-xs font-bold text-slate-950 hover:bg-emerald-400 transition"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-xs font-bold text-slate-950 hover:bg-emerald-400 transition-colors"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                     Sao chép mã QR Token
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       handleCopyToken(liveQrToken);
-                      switchDemoRole("TRAINER");
-                      router.push("/dashboard/trainer");
+                      startTransition(() => {
+                        switchDemoRole("TRAINER");
+                        router.push("/dashboard/trainer");
+                      });
                     }}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition-colors"
                   >
-                    Quét thử tại màn hình PT <ArrowRight className="h-3.5 w-3.5" />
+                    Quét thử tại màn hình PT{" "}
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 </div>
               </div>
             </div>
-          </div>
+          </DarkPassCard>
 
           {/* Right: Crisp Solid White Cards for Membership Details & Check-in History */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="solid-card p-6 space-y-4">
+            <SolidCard className="p-6 space-y-4">
               <h3 className="text-base font-extrabold text-slate-900">
                 Thông Tin Gói Tập Đang Sử Dụng
               </h3>
               <div className="space-y-3 text-xs divide-y divide-slate-100">
                 <div className="flex justify-between pt-2">
-                  <span className="font-medium text-slate-500">Gói đăng ký:</span>
+                  <span className="font-medium text-slate-500">
+                    Gói đăng ký:
+                  </span>
                   <span className="font-bold text-slate-900 text-right max-w-xs">
                     {primaryEnrollment.course?.title}
                   </span>
@@ -448,7 +485,7 @@ export default function MemberDashboardPage() {
                   <span className="font-medium text-slate-500">
                     Ngày hết hạn thẻ:
                   </span>
-                  <span className="font-mono font-bold text-slate-900">
+                  <span className="font-mono font-bold text-slate-900 tabular-nums">
                     {new Date(primaryEnrollment.expiresAt).toLocaleDateString(
                       "vi-VN"
                     )}
@@ -458,15 +495,15 @@ export default function MemberDashboardPage() {
                   <span className="font-medium text-slate-500">
                     Số buổi PT 1-1 còn lại:
                   </span>
-                  <span className="font-mono text-sm font-extrabold text-emerald-600">
+                  <span className="font-mono text-sm font-extrabold text-emerald-600 tabular-nums">
                     {primaryEnrollment.remainingPtSessions} /{" "}
                     {primaryEnrollment.totalPtSessions} buổi
                   </span>
                 </div>
               </div>
-            </div>
+            </SolidCard>
 
-            <div className="solid-card p-6 space-y-4">
+            <SolidCard className="p-6 space-y-4">
               <h3 className="text-base font-extrabold text-slate-900">
                 Lịch Sử Điểm Danh Phòng Tập Gần Đây
               </h3>
@@ -495,29 +532,32 @@ export default function MemberDashboardPage() {
                             Xác nhận bởi: {chk.verifiedByName}
                           </span>
                         </div>
-                        <div className="font-mono text-[11px] text-slate-500">
+                        <div
+                          className="font-mono text-[11px] text-slate-500"
+                          translate="no"
+                        >
                           Mã phiên: {chk.qrTokenHash}
                         </div>
                       </div>
-                      <div className="text-right font-medium text-slate-600">
+                      <div className="text-right font-mono font-medium text-slate-600 tabular-nums">
                         {new Date(chk.checkinTime).toLocaleString("vi-VN")}
                       </div>
                     </div>
                   )
                 )}
               </div>
-            </div>
+            </SolidCard>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* AREA 2: MY VIDEO COURSES */}
-      {activeTab === "COURSES" && (
+      {activeTab === "COURSES" ? (
         <div className="space-y-6">
           {memberData.enrollments.map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (enr: any) => (
-              <div key={enr.id} className="solid-card p-6 sm:p-8 space-y-6">
+              <SolidCard key={enr.id} className="p-6 sm:p-8 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
@@ -528,9 +568,11 @@ export default function MemberDashboardPage() {
                     </h2>
                     <p className="text-xs font-medium text-slate-600 mt-1">
                       Huấn luyện viên:{" "}
-                      <strong className="text-slate-900">{enr.trainerName}</strong>{" "}
+                      <strong className="text-slate-900">
+                        {enr.trainerName}
+                      </strong>{" "}
                       • Tiến độ hoàn thành:{" "}
-                      <strong className="text-emerald-600">
+                      <strong className="font-mono text-emerald-600 tabular-nums">
                         {enr.progressPct}%
                       </strong>
                     </p>
@@ -538,11 +580,11 @@ export default function MemberDashboardPage() {
 
                   <Link
                     href={`/dashboard/member/courses/${enr.id}`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition"
+                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition-colors"
                   >
-                    <PlaySquare className="h-4 w-4" />
+                    <PlaySquare className="h-4 w-4" aria-hidden="true" />
                     Vào Phòng Học Video
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </div>
 
@@ -564,20 +606,26 @@ export default function MemberDashboardPage() {
                               <Link
                                 key={les.id}
                                 href={`/dashboard/member/courses/${enr.id}?lessonId=${les.id}`}
-                                className="block rounded-lg border border-slate-200 bg-white p-3 hover:border-indigo-400 transition"
+                                className="block rounded-lg border border-slate-200 bg-white p-3 hover:border-indigo-400 transition-colors"
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <span className="text-xs font-bold text-slate-900 line-clamp-2">
                                     {les.title}
                                   </span>
                                   {les.progress?.isCompleted ? (
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                    <CheckCircle2
+                                      className="h-4 w-4 text-emerald-600 shrink-0"
+                                      aria-hidden="true"
+                                    />
                                   ) : (
-                                    <Clock className="h-4 w-4 text-amber-500 shrink-0" />
+                                    <Clock
+                                      className="h-4 w-4 text-amber-500 shrink-0"
+                                      aria-hidden="true"
+                                    />
                                   )}
                                 </div>
                                 <div className="mt-2 flex items-center justify-between text-[11px] font-medium text-slate-500">
-                                  <span className="font-mono">
+                                  <span className="font-mono tabular-nums">
                                     {les.progress?.watchedSeconds || 0}s /{" "}
                                     {les.durationSeconds}s
                                   </span>
@@ -601,14 +649,14 @@ export default function MemberDashboardPage() {
                     )
                   )}
                 </div>
-              </div>
+              </SolidCard>
             )
           )}
         </div>
-      )}
+      ) : null}
 
       {/* AREA 3: BOOK 1-1 PT SESSION */}
-      {activeTab === "PT_BOOKING" && (
+      {activeTab === "PT_BOOKING" ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <form
             onSubmit={handleBookPtSession}
@@ -625,10 +673,15 @@ export default function MemberDashboardPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1.5">
+                <label
+                  htmlFor="member-trainer"
+                  className="block font-bold text-slate-700 mb-1.5"
+                >
                   1. Chọn Huấn Luyện Viên
                 </label>
                 <select
+                  id="member-trainer"
+                  name="trainerId"
                   value={selectedTrainerId}
                   onChange={(e) => setSelectedTrainerId(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900"
@@ -645,23 +698,32 @@ export default function MemberDashboardPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1.5">
+                <label
+                  htmlFor="member-booking-date"
+                  className="block font-bold text-slate-700 mb-1.5"
+                >
                   2. Chọn Ngày Tập
                 </label>
                 <input
+                  id="member-booking-date"
+                  name="bookingDate"
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-900"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 font-mono text-xs font-bold text-slate-900"
                 />
               </div>
             </div>
 
             <div className="space-y-2.5">
-              <label className="block text-xs font-bold text-slate-700">
+              <span className="block text-xs font-bold text-slate-700">
                 3. Chọn Khung Giờ (Ca đã có học viên đặt sẽ tự động khóa):
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              </span>
+              <div
+                role="group"
+                aria-label="Chọn khung giờ tập cùng PT"
+                className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+              >
                 {trainerSlots.map((slot) => {
                   const isSelected =
                     selectedSlot?.startTime === slot.startTime;
@@ -670,13 +732,14 @@ export default function MemberDashboardPage() {
                       key={slot.id}
                       type="button"
                       disabled={slot.isBooked}
+                      aria-pressed={isSelected}
                       onClick={() =>
                         setSelectedSlot({
                           startTime: slot.startTime,
                           endTime: slot.endTime,
                         })
                       }
-                      className={`flex flex-col items-start justify-between rounded-xl border p-3.5 text-left transition ${
+                      className={`flex flex-col items-start justify-between rounded-xl border p-3.5 text-left transition-colors ${
                         slot.isBooked
                           ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
                           : isSelected
@@ -685,11 +748,14 @@ export default function MemberDashboardPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="font-mono text-sm font-extrabold">
+                        <span className="font-mono text-sm font-extrabold tabular-nums">
                           {slot.startTime} - {slot.endTime}
                         </span>
                         {slot.isBooked ? (
-                          <Lock className="h-4 w-4 text-rose-500" />
+                          <Lock
+                            className="h-4 w-4 text-rose-500"
+                            aria-hidden="true"
+                          />
                         ) : (
                           <CheckCircle2
                             className={`h-4 w-4 ${
@@ -697,6 +763,7 @@ export default function MemberDashboardPage() {
                                 ? "text-indigo-600"
                                 : "text-slate-300"
                             }`}
+                            aria-hidden="true"
                           />
                         )}
                       </div>
@@ -716,10 +783,15 @@ export default function MemberDashboardPage() {
             </div>
 
             <div className="space-y-1.5 text-xs">
-              <label className="block font-bold text-slate-700">
+              <label
+                htmlFor="member-focus-area"
+                className="block font-bold text-slate-700"
+              >
                 4. Chọn Nhóm Cơ Mục Tiêu Trong Buổi Tập
               </label>
               <select
+                id="member-focus-area"
+                name="focusArea"
                 value={focusArea}
                 onChange={(e) => setFocusArea(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900"
@@ -742,18 +814,21 @@ export default function MemberDashboardPage() {
             <button
               type="submit"
               disabled={bookingSubmitting}
-              className="w-full rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 transition"
+              className="w-full rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 transition-colors"
             >
               {bookingSubmitting
-                ? "Đang xác nhận lịch hẹn..."
+                ? "Đang xác nhận lịch hẹn…"
                 : "Xác Nhận Đặt Lịch Tập 1-1"}
             </button>
           </form>
 
           {/* Bookings List */}
-          <div className="lg:col-span-5 solid-card p-6 space-y-4">
+          <SolidCard className="lg:col-span-5 p-6 space-y-4">
             <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-indigo-600" />
+              <UserCheck
+                className="h-5 w-5 text-indigo-600"
+                aria-hidden="true"
+              />
               Lịch Hẹn Tập PT Của Bạn
             </h3>
 
@@ -766,7 +841,7 @@ export default function MemberDashboardPage() {
                     className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-slate-900">
+                      <span className="font-mono font-bold text-slate-900 tabular-nums">
                         {b.bookingDate} • {b.startTime} - {b.endTime}
                       </span>
                       <span
@@ -787,27 +862,27 @@ export default function MemberDashboardPage() {
                     <div className="font-medium text-slate-700">
                       Nhóm cơ: {b.focusArea}
                     </div>
-                    {b.trainerNotes && (
+                    {b.trainerNotes ? (
                       <div className="rounded-lg bg-white p-2.5 text-slate-700 border border-slate-200">
                         <strong className="text-emerald-700">
                           Đánh giá của HLV:
                         </strong>{" "}
                         {b.trainerNotes}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 )
               )}
             </div>
-          </div>
+          </SolidCard>
         </div>
-      )}
+      ) : null}
 
       {/* AREA 4: BODY METRICS & ORDERS HISTORY */}
-      {activeTab === "HISTORY" && (
+      {activeTab === "HISTORY" ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Body Metrics */}
-          <div className="lg:col-span-5 solid-card p-6 space-y-4">
+          <SolidCard className="lg:col-span-5 p-6 space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
                 Theo Dõi Thể Trạng
@@ -830,7 +905,7 @@ export default function MemberDashboardPage() {
                         Lần đo #{idx + 1} (
                         {new Date(m.recordedAt).toLocaleDateString("vi-VN")})
                       </span>
-                      <span className="rounded-md bg-white border border-slate-200 px-2 py-0.5 font-mono font-bold text-slate-800">
+                      <span className="rounded-md bg-white border border-slate-200 px-2 py-0.5 font-mono font-bold text-slate-800 tabular-nums">
                         BMI: {m.bmi}
                       </span>
                     </div>
@@ -839,7 +914,7 @@ export default function MemberDashboardPage() {
                         <div className="text-[10px] font-medium text-slate-500">
                           Cân nặng
                         </div>
-                        <div className="font-mono text-sm font-extrabold text-slate-900">
+                        <div className="font-mono text-sm font-extrabold text-slate-900 tabular-nums">
                           {m.weightKg} kg
                         </div>
                       </div>
@@ -847,7 +922,7 @@ export default function MemberDashboardPage() {
                         <div className="text-[10px] font-medium text-slate-500">
                           Tỷ lệ mỡ
                         </div>
-                        <div className="font-mono text-sm font-extrabold text-amber-600">
+                        <div className="font-mono text-sm font-extrabold text-amber-600 tabular-nums">
                           {m.bodyFatPct ?? "--"}%
                         </div>
                       </div>
@@ -855,7 +930,7 @@ export default function MemberDashboardPage() {
                         <div className="text-[10px] font-medium text-slate-500">
                           TDEE
                         </div>
-                        <div className="font-mono text-sm font-extrabold text-emerald-600">
+                        <div className="font-mono text-sm font-extrabold text-emerald-600 tabular-nums">
                           {m.tdeeCalories} kcal
                         </div>
                       </div>
@@ -864,10 +939,10 @@ export default function MemberDashboardPage() {
                 )
               )}
             </div>
-          </div>
+          </SolidCard>
 
           {/* Orders & FEFO Batch Traceability */}
-          <div className="lg:col-span-7 solid-card p-6 space-y-4">
+          <SolidCard className="lg:col-span-7 p-6 space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
                 Minh Bạch Nguồn Gốc Lô Hàng
@@ -887,7 +962,10 @@ export default function MemberDashboardPage() {
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
                       <div>
-                        <span className="font-mono text-sm font-extrabold text-slate-900">
+                        <span
+                          className="font-mono text-sm font-extrabold text-slate-900"
+                          translate="no"
+                        >
                           {ord.orderCode}
                         </span>
                         <span className="ml-2 font-medium text-slate-500">
@@ -898,7 +976,7 @@ export default function MemberDashboardPage() {
                         <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 font-bold text-emerald-700">
                           {ord.paymentMethod} • {ord.paymentStatus}
                         </span>
-                        <span className="font-mono text-sm font-extrabold text-slate-900">
+                        <span className="font-mono text-sm font-extrabold text-slate-900 tabular-nums">
                           {ord.totalAmount.toLocaleString("vi-VN")}đ
                         </span>
                       </div>
@@ -918,10 +996,13 @@ export default function MemberDashboardPage() {
                               </div>
                               {item.allocatedBatchCode ? (
                                 <div className="inline-flex flex-wrap items-center gap-2 text-[11px]">
-                                  <span className="rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-mono font-bold text-emerald-700">
+                                  <span
+                                    className="rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-mono font-bold text-emerald-700"
+                                    translate="no"
+                                  >
                                     Mã lô: {item.allocatedBatchCode}
                                   </span>
-                                  <span className="font-mono font-medium text-slate-600">
+                                  <span className="font-mono font-medium text-slate-600 tabular-nums">
                                     HSD: {item.allocatedBatchExpiry}
                                   </span>
                                 </div>
@@ -931,7 +1012,7 @@ export default function MemberDashboardPage() {
                                 </span>
                               )}
                             </div>
-                            <div className="font-mono font-extrabold text-slate-900 shrink-0">
+                            <div className="font-mono font-extrabold text-slate-900 shrink-0 tabular-nums">
                               {item.lineTotal.toLocaleString("vi-VN")}đ
                             </div>
                           </div>
@@ -942,9 +1023,9 @@ export default function MemberDashboardPage() {
                 )
               )}
             </div>
-          </div>
+          </SolidCard>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

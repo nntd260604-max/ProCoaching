@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  startTransition,
+} from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,6 +19,7 @@ import {
   Play,
 } from "lucide-react";
 import { useHybridCartStore } from "@/store/useHybridCartStore";
+import { SolidCard } from "@/components/ui/Surface";
 
 export default function MemberVideoClassroomPage() {
   const params = useParams();
@@ -20,7 +27,8 @@ export default function MemberVideoClassroomPage() {
   const enrollmentId = String(params?.enrollmentId || "enroll-member-01");
   const initialLessonId = searchParams.get("lessonId");
 
-  const { activeUserId, pushToast } = useHybridCartStore();
+  const activeUserId = useHybridCartStore((s) => s.activeUserId);
+  const pushToast = useHybridCartStore((s) => s.pushToast);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [enrollment, setEnrollment] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -114,7 +122,7 @@ export default function MemberVideoClassroomPage() {
   if (!enrollment || !activeLesson) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-16 text-center text-sm font-medium text-slate-600">
-        Đang mở phòng học Video...
+        Đang mở phòng học Video…
       </div>
     );
   }
@@ -130,12 +138,12 @@ export default function MemberVideoClassroomPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link
           href="/dashboard/member"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-600"
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Quay lại Trang Hội Viên
         </Link>
-        <span className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 text-xs font-bold text-emerald-700">
+        <span className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 font-mono text-xs font-bold text-emerald-700 tabular-nums">
           Tiến độ khóa học: {enrollment.progressPct}%
         </span>
       </div>
@@ -143,12 +151,13 @@ export default function MemberVideoClassroomPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Left Column: Video Player, Real-time Watched Progress & Workout Guide */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="solid-card p-3 overflow-hidden">
+          <SolidCard className="p-3 overflow-hidden">
             <video
               ref={videoRef}
               key={activeLesson.id}
               src={activeLesson.videoUrl}
               controls
+              preload="metadata"
               onLoadedMetadata={(e) => {
                 const pos = activeLesson.progress?.lastPositionSec || 0;
                 if (pos > 0 && pos < durationSec) {
@@ -163,24 +172,29 @@ export default function MemberVideoClassroomPage() {
               }}
               className="aspect-video w-full rounded-xl bg-slate-950 object-cover"
             />
-          </div>
+          </SolidCard>
 
           {/* Watched Progress Bar Card */}
-          <div className="solid-card p-6 space-y-4">
+          <SolidCard className="p-6 space-y-4" aria-live="polite">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   {isCompleted ? (
                     <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Đã hoàn thành bài học (&ge; 80%)
+                      <CheckCircle2
+                        className="h-3.5 w-3.5"
+                        aria-hidden="true"
+                      />{" "}
+                      Đã hoàn thành bài học (&ge; 80%)
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-bold text-amber-700">
-                      <Clock className="h-3.5 w-3.5" /> Cần xem tối thiểu {requiredSec} giây (80%) để hoàn thành
+                      <Clock className="h-3.5 w-3.5" aria-hidden="true" /> Cần
+                      xem tối thiểu {requiredSec} giây (80%) để hoàn thành
                     </span>
                   )}
                 </div>
-                <h1 className="text-xl font-extrabold text-slate-900 mt-2">
+                <h1 className="text-xl font-extrabold text-slate-900 mt-2 text-balance">
                   {activeLesson.title}
                 </h1>
               </div>
@@ -197,10 +211,12 @@ export default function MemberVideoClassroomPage() {
                     )
                   )
                 }
-                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition shrink-0"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition-colors shrink-0"
               >
-                <FastForward className="h-4 w-4" />
-                {syncing ? "Đang lưu tiến độ..." : "Cộng nhanh +15 giây thực xem"}
+                <FastForward className="h-4 w-4" aria-hidden="true" />
+                {syncing
+                  ? "Đang lưu tiến độ…"
+                  : "Cộng nhanh +15 giây thực xem"}
               </button>
             </div>
 
@@ -208,13 +224,13 @@ export default function MemberVideoClassroomPage() {
               <div className="flex justify-between text-xs font-medium text-slate-600">
                 <span>
                   Thời lượng đã xem:{" "}
-                  <strong className="font-mono text-slate-900">
+                  <strong className="font-mono text-slate-900 tabular-nums">
                     {watchedSec}s / {durationSec}s ({watchedPct}%)
                   </strong>
                 </span>
                 <span>
                   Vị trí đang phát:{" "}
-                  <strong className="font-mono text-indigo-600">
+                  <strong className="font-mono text-indigo-600 tabular-nums">
                     {activeLesson.progress?.lastPositionSec || 0}s
                   </strong>
                 </span>
@@ -223,7 +239,7 @@ export default function MemberVideoClassroomPage() {
               <div className="relative h-3 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-200">
                 <div
                   style={{ width: `${watchedPct}%` }}
-                  className={`h-full transition-all duration-500 ${
+                  className={`h-full transition-[width] duration-500 ${
                     isCompleted ? "bg-emerald-600" : "bg-indigo-600"
                   }`}
                 />
@@ -241,24 +257,27 @@ export default function MemberVideoClassroomPage() {
                 <span>100%</span>
               </div>
             </div>
-          </div>
+          </SolidCard>
 
           {/* Workout Guide (Sets x Reps) */}
-          <div className="solid-card p-6 space-y-3">
-            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-emerald-600" />
+          <SolidCard className="p-6 space-y-3">
+            <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <Dumbbell
+                className="h-5 w-5 text-emerald-600"
+                aria-hidden="true"
+              />
               Hướng Dẫn Thực Hành (Số Hiệp & Số Lần Lặp)
-            </h3>
+            </h2>
             <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 text-xs sm:text-sm font-medium leading-relaxed text-slate-700 whitespace-pre-line">
               {activeLesson.workoutGuideMd ||
                 "Thực hiện 4 hiệp x 8-12 lần lặp (Reps), nghỉ 60-90 giây giữa các hiệp."}
             </div>
-          </div>
+          </SolidCard>
         </div>
 
         {/* Right Column: Modules & Lessons List */}
         <div className="lg:col-span-4">
-          <div className="solid-card p-6 space-y-4 sticky top-24">
+          <SolidCard className="p-6 space-y-4 sticky top-24">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
@@ -268,7 +287,10 @@ export default function MemberVideoClassroomPage() {
                   Danh Sách Bài Giảng ({enrollment.progressPct}%)
                 </h2>
               </div>
-              <ShieldCheck className="h-5 w-5 text-emerald-600" />
+              <ShieldCheck
+                className="h-5 w-5 text-emerald-600"
+                aria-hidden="true"
+              />
             </div>
 
             <div className="space-y-4">
@@ -288,29 +310,41 @@ export default function MemberVideoClassroomPage() {
                             <button
                               key={les.id}
                               type="button"
-                              onClick={() => setActiveLesson(les)}
-                              className={`w-full flex items-start justify-between gap-2.5 rounded-xl border p-3 text-left transition ${
+                              aria-pressed={isCurrent}
+                              onClick={() =>
+                                startTransition(() => setActiveLesson(les))
+                              }
+                              className={`w-full flex items-start justify-between gap-2.5 rounded-xl border p-3 text-left transition-colors ${
                                 isCurrent
                                   ? "border-indigo-600 bg-indigo-50/70"
                                   : "border-slate-200 bg-white hover:bg-slate-50"
                               }`}
                             >
-                              <div className="flex items-start gap-2">
-                                <Play className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-                                <div>
-                                  <div className="text-xs font-bold text-slate-900">
+                              <div className="flex items-start gap-2 min-w-0">
+                                <Play
+                                  className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5"
+                                  aria-hidden="true"
+                                />
+                                <div className="min-w-0">
+                                  <div className="text-xs font-bold text-slate-900 line-clamp-2">
                                     {les.title}
                                   </div>
-                                  <div className="font-mono text-[11px] font-medium text-slate-500 mt-1">
-                                    Đã xem: {les.progress?.watchedSeconds || 0}s /{" "}
-                                    {les.durationSeconds}s
+                                  <div className="font-mono text-[11px] font-medium text-slate-500 mt-1 tabular-nums">
+                                    Đã xem: {les.progress?.watchedSeconds || 0}s
+                                    / {les.durationSeconds}s
                                   </div>
                                 </div>
                               </div>
                               {les.progress?.isCompleted ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                                <CheckCircle2
+                                  className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5"
+                                  aria-hidden="true"
+                                />
                               ) : (
-                                <Clock className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                                <Clock
+                                  className="h-4 w-4 text-slate-400 shrink-0 mt-0.5"
+                                  aria-hidden="true"
+                                />
                               )}
                             </button>
                           );
@@ -321,7 +355,7 @@ export default function MemberVideoClassroomPage() {
                 )
               )}
             </div>
-          </div>
+          </SolidCard>
         </div>
       </div>
     </div>
